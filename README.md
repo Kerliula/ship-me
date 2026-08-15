@@ -8,15 +8,10 @@ plausible, and you found out three commits later.
 
 These six skills put a gate in front of every step where that can happen.
 
-```
-/grill-me    →  Can you explain the problem in your own words?
-/solve-me    →  What are ALL the real options, in plain language?
-/build-me    →  One commit at a time, each one justified, you review each.
-/verify-me   →  Does the running app actually do it? (curl, real data)
-/test-me     →  Only the tests that would catch a real bug.
-
-/ship-me     →  Runs all five, in order, with your approval gates intact.
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/pipeline-dark.svg">
+  <img alt="The ship-me pipeline: grill-me, solve-me, build-me, verify-me and test-me, each writing a markdown artifact for the next, with developer approval gates between them." src="assets/pipeline-light.svg">
+</picture>
 
 You stay in control at every gate. The skills are deliberately hard to
 steamroll: `/grill-me` won't advance until you can answer, `/build-me` won't
@@ -55,6 +50,14 @@ Each phase hands its markdown file to the next one, so the reasoning is on disk
 and reviewable instead of buried in a chat log. Each skill is also usable on its
 own — `/grill-me` alone is worth it for anything you don't fully understand yet.
 
+## See it before you run it
+
+[`examples/export-timeout/`](examples/export-timeout/) carries one feature —
+a CSV export that times out on large accounts — through all four written
+phases: the interrogation, the option comparison, the approved commit
+plan, and the verification run that caught a requirement the code got
+wrong. Start there if you want to know what these skills actually hand you.
+
 ## Design principles
 
 **Comprehension debt is the real debt.** Speed you borrow by not understanding
@@ -83,7 +86,7 @@ Laravel. PRs that generalize these are welcome.
 Issues and PRs welcome, particularly:
 
 - Generalizing the three Laravel-coupled skills to other stacks
-- Real example runs from your own projects
+- Real example runs from your own projects (see [`examples/`](examples/))
 - Cases where a skill let something through it should have caught
 
 ## License
