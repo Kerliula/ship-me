@@ -90,21 +90,21 @@ directly if they want to weigh in on a trade-off while it runs.
 
 When its completion notification arrives, confirm
 `docs/solutions/<slug>.md` actually exists and looks complete (has a
-recommendation for every piece) before moving on. If it doesn't, stop
+recommendation for every sub-problem) before moving on. If it doesn't, stop
 and tell the developer instead of pushing forward.
 
 ### Gate — the developer reviews the solution before anything is built
 
 **This is a hard stop. Phase 2 never flows straight into Phase 3.**
-The whole point of solve-me is that each piece has several real
+The whole point of solve-me is that each sub-problem has several real
 options — that's worthless if the build starts before the developer
 has looked at them.
 
 When the solve-me file is ready, post a decision-grade summary in this
 conversation — enough to decide from chat without opening the file.
-Per piece, two lines:
+Per sub-problem, two lines:
 
-> **Piece N — <title>**
+> **Sub-problem N — <title>**
 > Recommended: <option> — <its one-line why, copied from the file>
 > Runner-up: <strongest rejected option> — <one line on why it lost>
 
@@ -200,6 +200,13 @@ what was built, what was tested, and anything
 still open (dropped test candidates, unresolved trade-offs the
 spawned phases flagged).
 
+Then run `/map-me` in this conversation. It rebuilds the map across
+every run in the project, not just this one, and reports what the
+artifacts don't account for — requirements nothing proved, decisions
+made mid-build that never hit a gate, and files this run has now
+touched that earlier runs touched too. It's a report, not a phase:
+nothing gets fixed, and it doesn't gate anything.
+
 Finish by pasting the **Requirements (copy-paste ready)** block from
 `docs/grilling/<slug>.md` — what was built, what was deliberately not
 built, and how it was checked — so it can go straight into the PR
@@ -219,19 +226,19 @@ description or commit body.
 - **Commits are cut in Phase 3, not Phase 2.** Don't ask solve-me for
   commit boundaries and don't invent them yourself — build-me writes
   the plan to `docs/build/<slug>.md` and gets it approved.
-- **Keep the solve-me numbering, exactly.** The pieces in
+- **Keep the solve-me numbering, exactly.** The sub-problems in
   `docs/solutions/<slug>.md` are numbered, and that numbering is the
-  build order. Commit 1 builds piece 1, and so on. Do not reorder them
-  because a later piece "has no dependencies" or an earlier one
+  build order. Commit 1 builds sub-problem 1, and so on. Do not reorder them
+  because a later sub-problem "has no dependencies" or an earlier one
   "produces no code on its own" — the developer reads the solution
   file top to bottom and expects the build to match it line for line.
-- **A piece may be split, never resequenced.** If a piece is too big
-  for one review, split it into 3a / 3b / 3c and build those in
-  order. The sub-commits stay inside their piece's slot; they never
-  jump ahead of an earlier piece or trail behind a later one.
-- **If a piece genuinely cannot be built in its slot** — it needs
-  something a later piece creates — stop and say so before writing
-  any code. Name the piece, name what it needs, and let the developer
+- **A sub-problem may be split, never resequenced.** If one is too
+  big for a single review, split it into 3a / 3b / 3c and build those
+  in order. The sub-commits stay inside their sub-problem's slot; they
+  never jump ahead of an earlier one or trail behind a later one.
+- **If a sub-problem genuinely cannot be built in its slot** — it needs
+  something a later sub-problem creates — stop and say so before writing
+  any code. Name the sub-problem, name what it needs, and let the developer
   decide whether to reorder. Never resolve it silently.
 - **Every commit traces to a requirement.** The R-numbers come from
   the grill-me file's requirements block; if a commit serves none of
@@ -262,3 +269,5 @@ description or commit body.
 - The developer has the four output docs and the final test suite,
   plus a short summary tying the whole run together and the
   copy-paste requirements block.
+- `/map-me` ran at the end, and anything it found was reported rather
+  than quietly fixed.

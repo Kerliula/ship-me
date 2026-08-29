@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1288 516" width="1288" height="516" font-family="ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" role="img" aria-label="The ship-me pipeline: grill-me, solve-me, build-me, verify-me, test-me, with developer approval gates between them.">
-<rect width="1288" height="516" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1288 588" width="1288" height="588" font-family="ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" role="img" aria-label="The ship-me pipeline: grill-me, solve-me, build-me, verify-me, test-me, with developer approval gates between them, and map-me drawing every run as one graph.">
+<rect width="1288" height="588" fill="#ffffff"/>
 <text x="44" y="46" font-size="21" font-weight="600" fill="#1f2328">Five gates between a vague idea and tested code</text>
 <text x="44" y="70" font-size="14" fill="#656d76">Each phase hands a written artifact to the next. Nothing advances on a phase that isn't finished.</text>
 <rect x="44" y="140" width="208" height="236" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
@@ -69,6 +69,9 @@
 <rect x="44" y="406" width="1200" height="56" rx="10" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" stroke-dasharray="5 4"/>
 <text x="64" y="440" font-size="15" font-weight="600" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#0969da">/ship-me</text>
 <text x="168" y="440" font-size="13.5" fill="#1f2328">runs all five in order — and still stops at every gate. Each skill also works on its own.</text>
-<path d="M 51 484 l 7 7 l -7 7 l -7 -7 z" fill="#fff8c5" stroke="#d4a72c" stroke-width="1.5"/>
-<text x="70" y="489" font-size="12" fill="#656d76">approval gate — the pipeline waits for you (a third gate sits inside /build-me: the commit plan)</text>
+<rect x="44" y="474" width="1200" height="56" rx="10" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="64" y="508" font-size="15" font-weight="600" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#0969da">/map-me</text>
+<text x="168" y="508" font-size="13.5" fill="#1f2328">draws every run as one graph and reports the holes — what nothing built, what nothing proved, what skipped a gate.</text>
+<path d="M 51 552 l 7 7 l -7 7 l -7 -7 z" fill="#fff8c5" stroke="#d4a72c" stroke-width="1.5"/>
+<text x="70" y="557" font-size="12" fill="#656d76">approval gate — the pipeline waits for you (a third gate sits inside /build-me: the commit plan)</text>
 </svg>

@@ -238,6 +238,12 @@ coverage table — verified with the requests that prove it, failed with
 a pointer to Problems found, or skipped with a one-line reason. No
 requirement just disappears.
 
+Keep the coverage table's shape exactly as above: three columns, the
+first cell starting with the bare R-number, the third holding ✅, ❌ or
+— and nothing else before the dash. `/map-me` reads this table to mark
+which requirements are actually proven, so a reformatted table silently
+turns a verified requirement into an unproven one.
+
 Tell the developer the file path once it's written.
 
 ---

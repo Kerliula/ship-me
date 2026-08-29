@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Comprehension map</title>
+<style>
+:root{--bg:#fbfaf8;--fg:#1c1b19;--dim:#6b6a67;--line:#dcd9d4;--panel:#fff}
+@media(prefers-color-scheme:dark){:root{--bg:#16151a;--fg:#e9e7e3;--dim:#8f8d89;--line:#2f2d33;--panel:#1e1d23}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}
+#wrap{display:flex;height:100vh}
+#side{width:320px;flex:none;border-right:1px solid var(--line);padding:16px;overflow-y:auto;background:var(--panel)}
+#stage{flex:1;position:relative}
+canvas{display:block;cursor:grab}
+canvas.drag{cursor:grabbing}
+h1{font-size:15px;margin:0 0 4px}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);margin:20px 0 8px;font-weight:600}
+.sub{color:var(--dim);font-size:12px;margin:0 0 16px}
+label{display:flex;align-items:center;gap:8px;padding:3px 0;cursor:pointer;font-size:13px}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+input[type=search]{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit}
+#detail{font-size:13px}
+#detail .t{font-weight:600;margin-bottom:6px}
+#detail .k{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+#detail ul{margin:6px 0;padding-left:18px}
+#detail li{margin:2px 0}
+.hole{color:#c2410c}
+@media(prefers-color-scheme:dark){.hole{color:#fb923c}}
+.badge{display:inline-block;padding:1px 6px;border-radius:99px;border:1px solid var(--line);font-size:11px;color:var(--dim)}
+#legend small{color:var(--dim)}
+</style></head><body>
+<div id="wrap">
+<div id="side">
+  <h1>Comprehension map</h1>
+  <p class="sub" id="counts"></p>
+  <input type="search" id="q" placeholder="filter nodes...">
+  <h2>Show</h2>
+  <div id="legend"></div>
+  <label style="margin-top:8px"><input type="checkbox" id="onlyholes"> only nodes with holes</label>
+  <h2>Selected</h2>
+  <div id="detail"><span class="sub">Click a node.</span></div>
+  <h2 id="holeshead">Holes</h2>
+  <div id="holes"></div>
+</div>
+<div id="stage"><canvas id="cv"></canvas></div>
+</div>
+<script>
+var DATA = {"generated":"2026-08-29T15:02:07.784Z","nodes":[{"id":"export-timeout","kind":"run","slug":"export-timeout","label":"export-timeout","phases":["grilling","solution","build","verification"],"files":{"grilling":"ship-me/examples/export-timeout/1-grilling.md","solution":"ship-me/examples/export-timeout/2-solutions.md","build":"ship-me/examples/export-timeout/3-build.md","verification":"ship-me/examples/export-timeout/4-verification.md"},"hole":false},{"id":"export-timeout:R1","kind":"requirement","slug":"export-timeout","label":"R1","title":"Asking for an export answers immediately, no matter how big the account is.","status":"verified","verifiedBy":"requests 1, 9","hole":false},{"id":"export-timeout:R2","kind":"requirement","slug":"export-timeout","label":"R2","title":"The finished file becomes downloadable once it's fully built.","status":"verified","verifiedBy":"requests 3, 4, 11","hole":false},{"id":"export-timeout:R3","kind":"requirement","slug":"export-timeout","label":"R3","title":"Asking again while one is already building does not start a second one.","status":"verified","verifiedBy":"request 5","hole":false},{"id":"export-timeout:R4","kind":"requirement","slug":"export-timeout","label":"R4","title":"Only the account that asked for an export can download it.","status":"verified","verifiedBy":"requests 6, 7","hole":false},{"id":"export-timeout:R5","kind":"requirement","slug":"export-timeout","label":"R5","title":"A finished export stops being downloadable after 24 hours.","status":"failed","verifiedBy":"request 8","hole":true},{"id":"export-timeout:R6","kind":"requirement","slug":"export-timeout","label":"R6","title":"An export that fails is shown as failed, not left silent.","status":"verified","verifiedBy":"request 10","hole":false},{"id":"export-timeout:S1","kind":"subproblem","slug":"export-timeout","label":"S1","title":"How does someone get a file that takes too long to make on the spot?","why":"It's the only option that satisfies R1 and R2 at every size without introducing a new failure mode. D is disqualified outright by the \"never a partial file\" rule. A doesn't actually fix the reported problem. B is a good addition later but leaves the person on the page uninformed, and its email dependency is a bigger commitment than the problem needs right now. C's weakness — losing track after closing the page — is smaller, and B can be layered on top later without undoing any of it.","recommended":"C","hole":false},{"id":"export-timeout:S1.A","kind":"option","slug":"export-timeout","label":"S1.A","title":"Wait longer","chosen":false,"rejected":"Postpones the problem instead of removing it. The accounts big enough to complain are exactly the ones that still fail at any limit you pick.","how":"allow the request to stay open longer before giving up.","hole":false},{"id":"export-timeout:S1.B","kind":"option","slug":"export-timeout","label":"S1.B","title":"Make it in the background, send a link by email","chosen":false,"rejected":"Leaves the person on the page with no idea what's happening, and takes on a dependency on email that this problem doesn't need yet.","how":"write down the request, answer immediately, build the file separately, then email a link when it's done.","hole":false},{"id":"export-timeout:S1.C","kind":"option","slug":"export-timeout","label":"S1.C","title":"Make it in the background, let the page check on it","chosen":true,"rejected":null,"how":"write down the request, answer immediately with a way to refer to it, build the file separately. The page asks \"is it done yet?\" every few seconds and shows the answer.","hole":false},{"id":"export-timeout:S1.D","kind":"option","slug":"export-timeout","label":"S1.D","title":"Send the file in pieces as it's made","chosen":false,"rejected":"A dropped connection leaves a partial file that looks complete, which breaks \"an export that says ready is never partial\" outright.","how":"start answering immediately and keep writing rows into the response as they're gathered.","hole":false},{"id":"export-timeout:S2","kind":"subproblem","slug":"export-timeout","label":"S2","title":"What happens when someone asks twice?","why":"It makes the reported behavior (impatient clicking) harmless instead of punishing it, and it protects the shared workers. Option B enforces the same limit but turns an ordinary double-click into an error the person has to understand. C's cost only shows up in a narrow case, and the fix for it — wait, then ask again — is obvious.","recommended":"C","hole":false},{"id":"export-timeout:S2.A","kind":"option","slug":"export-timeout","label":"S2.A","title":"Start another one","chosen":false,"rejected":"It is the pile-up described in the problem, not a fix for it.","how":"every ask makes a new export.","hole":false},{"id":"export-timeout:S2.B","kind":"option","slug":"export-timeout","label":"S2.B","title":"Refuse the second ask","chosen":false,"rejected":"Turns an ordinary double-click into an error the person has to understand, and still doesn't tell them when their file will be ready.","how":"if one is already building, answer with a refusal.","hole":false},{"id":"export-timeout:S2.C","kind":"option","slug":"export-timeout","label":"S2.C","title":"Hand back the one already running","chosen":true,"rejected":null,"how":"if one is already building, answer as though they'd just asked for that one, pointing at it.","hole":false},{"id":"export-timeout:S3","kind":"subproblem","slug":"export-timeout","label":"S3","title":"Who may download a finished file, and for how long?","why":"It's the only option that satisfies R4 and R5 together while respecting the storage constraint. D adds real fragility for a security gain the fixed window already mostly provides.","recommended":"C","hole":false},{"id":"export-timeout:S3.A","kind":"option","slug":"export-timeout","label":"S3.A","title":"Anyone holding the link, forever","chosen":false,"rejected":"Violates R4 outright — the link alone would expose a full contact list to anyone who ever sees it.","how":"the link itself is the permission.","hole":false},{"id":"export-timeout:S3.B","kind":"option","slug":"export-timeout","label":"S3.B","title":"Only the owner, forever","chosen":false,"rejected":"Stored files accumulate with no upper bound, which the constraints explicitly forbid.","how":"check on each download that the asker is the account that requested it. Keep files indefinitely.","hole":false},{"id":"export-timeout:S3.C","kind":"option","slug":"export-timeout","label":"S3.C","title":"Only the owner, for a fixed window","chosen":true,"rejected":null,"how":"check the asker is the owner, and check the file is still inside its keep-window. Outside it, refuse and say why.","hole":false},{"id":"export-timeout:S3.D","kind":"option","slug":"export-timeout","label":"S3.D","title":"Only the owner, one download only","chosen":false,"rejected":"A retrying browser or a download that fails partway silently burns the only chance, and large-file downloads fail partway often.","how":"as C, but the file dies after the first successful fetch.","hole":false},{"id":"export-timeout:C1","kind":"commit","slug":"export-timeout","label":"C1","title":"Record an export request and its state","why":"Nothing else can work until there's something to refer to. The instant answer, the progress checks, and the failure report all need a written-down request with a state on it.","doneWhen":"Clicking Export writes a row in `requested` state and answers immediately with its id, without building anything yet.","touches":"`database/migrations/2024_05_01_000000_create_export_requests_table.php`, `app/Models/ExportRequest.php`, `app/Http/Controllers/ContactExportController.php`","files":["database/migrations/2024_05_01_000000_create_export_requests_table.php","app/Models/ExportRequest.php","app/Http/Controllers/ContactExportController.php"],"hole":false},{"id":"file:database/migrations/2024_05_01_000000_create_export_requests_table.php","kind":"file","slug":null,"label":"database/migrations/2024_05_01_000000_create_export_requests_table.php","path":"database/migrations/2024_05_01_000000_create_export_requests_table.php","touchedBy":["export-timeout:C1"],"runs":["export-timeout"],"hole":false},{"id":"file:app/Models/ExportRequest.php","kind":"file","slug":null,"label":"app/Models/ExportRequest.php","path":"app/Models/ExportRequest.php","touchedBy":["export-timeout:C1","export-timeout:C2"],"runs":["export-timeout"],"hole":false},{"id":"file:app/Http/Controllers/ContactExportController.php","kind":"file","slug":null,"label":"app/Http/Controllers/ContactExportController.php","path":"app/Http/Controllers/ContactExportController.php","touchedBy":["export-timeout:C1","export-timeout:C3","export-timeout:C4"],"runs":["export-timeout"],"hole":false},{"id":"export-timeout:C1:U1","kind":"unplanned","slug":"export-timeout","label":"C1.U1","title":"Stored the requesting account on the export row rather than deriving it from whoever owns the contact list. For a shared list those differ, and the solution never said which one should own the download.","hole":true},{"id":"export-timeout:C1:U2","kind":"unplanned","slug":"export-timeout","label":"C1.U2","title":"Called the first state `requested` rather than `queued` — nothing is queued until commit 2 exists.","hole":true},{"id":"export-timeout:C2","kind":"commit","slug":"export-timeout","label":"C2","title":"Build the file in the background","why":"This is the part that produces the file. Without it a request is recorded and then nothing ever happens to it.","doneWhen":"A queued job moves a request `requested → building → ready`, leaves a complete file behind, and moves it to `failed` with the reason recorded if it throws.","touches":"`app/Jobs/BuildContactExport.php`, `app/Models/ExportRequest.php`, `config/filesystems.php`","files":["app/Jobs/BuildContactExport.php","app/Models/ExportRequest.php","config/filesystems.php"],"hole":false},{"id":"file:app/Jobs/BuildContactExport.php","kind":"file","slug":null,"label":"app/Jobs/BuildContactExport.php","path":"app/Jobs/BuildContactExport.php","touchedBy":["export-timeout:C2"],"runs":["export-timeout"],"hole":false},{"id":"file:config/filesystems.php","kind":"file","slug":null,"label":"config/filesystems.php","path":"config/filesystems.php","touchedBy":["export-timeout:C2"],"runs":["export-timeout"],"hole":false},{"id":"export-timeout:C2:U1","kind":"unplanned","slug":"export-timeout","label":"C2.U1","title":"Recorded the failure reason as free text rather than a code. R6 only asks that failures are shown to the person; nothing reads it programmatically yet, and a code would need a list nobody has agreed.","hole":true},{"id":"export-timeout:C3","kind":"commit","slug":"export-timeout","label":"C3","title":"Let the page ask whether it's done","why":"R1 isn't satisfied by answering fast if the person then has no way to learn the answer. This closes that loop.","doneWhen":"The page polls and displays building, ready, or failed, and shows a download link only for ready.","touches":"`app/Http/Controllers/ContactExportController.php`, `routes/web.php`, `resources/js/contacts/export-status.js`","files":["app/Http/Controllers/ContactExportController.php","routes/web.php","resources/js/contacts/export-status.js"],"hole":false},{"id":"file:routes/web.php","kind":"file","slug":null,"label":"routes/web.php","path":"routes/web.php","touchedBy":["export-timeout:C3"],"runs":["export-timeout"],"hole":false},{"id":"file:resources/js/contacts/export-status.js","kind":"file","slug":null,"label":"resources/js/contacts/export-status.js","path":"resources/js/contacts/export-status.js","touchedBy":["export-timeout:C3"],"runs":["export-timeout"],"hole":false},{"id":"export-timeout:C3:U1","kind":"unplanned","slug":"export-timeout","label":"C3.U1","title":"Polls every 3 seconds. The solution said \"every few seconds\" and never picked a number.","hole":true},{"id":"export-timeout:C4","kind":"commit","slug":"export-timeout","label":"C4","title":"Reuse an in-progress export instead of starting a second","why":"The pile-up from impatient clicking is half the reported problem. Until this lands, the fix makes that worse, because answering instantly means people can click far more often.","doneWhen":"Asking while one is `requested` or `building` returns that same export's id and queues no new job.","touches":"`app/Http/Controllers/ContactExportController.php`","files":["app/Http/Controllers/ContactExportController.php"],"hole":false},{"id":"export-timeout:C4:U1","kind":"unplanned","slug":"export-timeout","label":"C4.U1","title":"Matched an existing export on contact list *and* requester, not on requester alone. Requester alone would hand someone exporting a second list the wrong file entirely.","hole":true},{"id":"export-timeout:C5","kind":"commit","slug":"export-timeout","label":"C5","title":"Restrict downloads to the owner, and expire them","why":"An export is a complete contact list. Until this commit, the download is open to anyone who has the link, forever.","doneWhen":"A download by another account is refused, a download after 24 hours is refused with a plain explanation, and expired files are removed from storage.","touches":"`app/Http/Controllers/ContactExportDownloadController.php`, `app/Policies/ExportRequestPolicy.php`, `app/Console/Commands/PurgeExpiredExports.php`, `routes/console.php`","files":["app/Http/Controllers/ContactExportDownloadController.php","app/Policies/ExportRequestPolicy.php","app/Console/Commands/PurgeExpiredExports.php","routes/console.php"],"hole":false},{"id":"file:app/Http/Controllers/ContactExportDownloadController.php","kind":"file","slug":null,"label":"app/Http/Controllers/ContactExportDownloadController.php","path":"app/Http/Controllers/ContactExportDownloadController.php","touchedBy":["export-timeout:C5"],"runs":["export-timeout"],"hole":false},{"id":"file:app/Policies/ExportRequestPolicy.php","kind":"file","slug":null,"label":"app/Policies/ExportRequestPolicy.php","path":"app/Policies/ExportRequestPolicy.php","touchedBy":["export-timeout:C5"],"runs":["export-timeout"],"hole":false},{"id":"file:app/Console/Commands/PurgeExpiredExports.php","kind":"file","slug":null,"label":"app/Console/Commands/PurgeExpiredExports.php","path":"app/Console/Commands/PurgeExpiredExports.php","touchedBy":["export-timeout:C5"],"runs":["export-timeout"],"hole":false},{"id":"file:routes/console.php","kind":"file","slug":null,"label":"routes/console.php","path":"routes/console.php","touchedBy":["export-timeout:C5"],"runs":["export-timeout"],"hole":false},{"id":"export-timeout:C5:U1","kind":"unplanned","slug":"export-timeout","label":"C5.U1","title":"Put the 24-hour window check on the query that lists exports on the contacts page, so expired ones stop being offered. The download route itself keeps only the owner check.","hole":true},{"id":"export-timeout:C5:U2","kind":"unplanned","slug":"export-timeout","label":"C5.U2","title":"Clean-up runs nightly rather than hourly. The solution said downloads stop after 24 hours, not how quickly the files are deleted.","hole":true}],"edges":[{"from":"export-timeout:R1","to":"export-timeout","type":"in-run","label":null},{"from":"export-timeout:R2","to":"export-timeout","type":"in-run","label":null},{"from":"export-timeout:R3","to":"export-timeout","type":"in-run","label":null},{"from":"export-timeout:R4","to":"export-timeout","type":"in-run","label":null},{"from":"export-timeout:R5","to":"export-timeout","type":"in-run","label":null},{"from":"export-timeout:R6","to":"export-timeout","type":"in-run","label":null},{"from":"export-timeout:S1","to":"export-timeout","type":"in-run","label":null},{"from":"export-timeout:S1","to":"export-timeout:R1","type":"serves","label":null},{"from":"export-timeout:S1","to":"export-timeout:R2","type":"serves","label":null},{"from":"export-timeout:S1","to":"export-timeout:R6","type":"serves","label":null},{"from":"export-timeout:S1.A","to":"export-timeout:S1","type":"rejected","label":"Postpones the problem instead of removing it. The accounts big enough to complain are exactly the ones that still fail at any limit you pick."},{"from":"export-timeout:S1.B","to":"export-timeout:S1","type":"rejected","label":"Leaves the person on the page with no idea what's happening, and takes on a dependency on email that this problem doesn't need yet."},{"from":"export-timeout:S1.C","to":"export-timeout:S1","type":"chosen","label":"It's the only option that satisfies R1 and R2 at every size without introducing a new failure mode. D is disqualified outright by the \"never a partial file\" rule. A doesn't actually fix the reported problem. B is a good addition later but leaves the person on the page uninformed, and its email dependency is a bigger commitment than the problem needs right now. C's weakness — losing track after closing the page — is smaller, and B can be layered on top later without undoing any of it."},{"from":"export-timeout:S1.D","to":"export-timeout:S1","type":"rejected","label":"A dropped connection leaves a partial file that looks complete, which breaks \"an export that says ready is never partial\" outright."},{"from":"export-timeout:S2","to":"export-timeout","type":"in-run","label":null},{"from":"export-timeout:S2","to":"export-timeout:R3","type":"serves","label":null},{"from":"export-timeout:S2.A","to":"export-timeout:S2","type":"rejected","label":"It is the pile-up described in the problem, not a fix for it."},{"from":"export-timeout:S2.B","to":"export-timeout:S2","type":"rejected","label":"Turns an ordinary double-click into an error the person has to understand, and still doesn't tell them when their file will be ready."},{"from":"export-timeout:S2.C","to":"export-timeout:S2","type":"chosen","label":"It makes the reported behavior (impatient clicking) harmless instead of punishing it, and it protects the shared workers. Option B enforces the same limit but turns an ordinary double-click into an error the person has to understand. C's cost only shows up in a narrow case, and the fix for it — wait, then ask again — is obvious."},{"from":"export-timeout:S3","to":"export-timeout","type":"in-run","label":null},{"from":"export-timeout:S3","to":"export-timeout:R4","type":"serves","label":null},{"from":"export-timeout:S3","to":"export-timeout:R5","type":"serves","label":null},{"from":"export-timeout:S3.A","to":"export-timeout:S3","type":"rejected","label":"Violates R4 outright — the link alone would expose a full contact list to anyone who ever sees it."},{"from":"export-timeout:S3.B","to":"export-timeout:S3","type":"rejected","label":"Stored files accumulate with no upper bound, which the constraints explicitly forbid."},{"from":"export-timeout:S3.C","to":"export-timeout:S3","type":"chosen","label":"It's the only option that satisfies R4 and R5 together while respecting the storage constraint. D adds real fragility for a security gain the fixed window already mostly provides."},{"from":"export-timeout:S3.D","to":"export-timeout:S3","type":"rejected","label":"A retrying browser or a download that fails partway silently burns the only chance, and large-file downloads fail partway often."},{"from":"export-timeout:C1","to":"export-timeout","type":"in-run","label":null},{"from":"export-timeout:C1","to":"export-timeout:S1","type":"from","label":null},{"from":"export-timeout:C1","to":"export-timeout:S1.C","type":"builds","label":null},{"from":"export-timeout:C1","to":"export-timeout:R1","type":"serves","label":null},{"from":"export-timeout:C1","to":"export-timeout:R6","type":"serves","label":null},{"from":"export-timeout:C1","to":"file:database/migrations/2024_05_01_000000_create_export_requests_table.php","type":"touches","label":null},{"from":"export-timeout:C1","to":"file:app/Models/ExportRequest.php","type":"touches","label":null},{"from":"export-timeout:C1","to":"file:app/Http/Controllers/ContactExportController.php","type":"touches","label":null},{"from":"export-timeout:C1:U1","to":"export-timeout:C1","type":"decided-during","label":null},{"from":"export-timeout:C1:U2","to":"export-timeout:C1","type":"decided-during","label":null},{"from":"export-timeout:C2","to":"export-timeout","type":"in-run","label":null},{"from":"export-timeout:C2","to":"export-timeout:S1","type":"from","label":null},{"from":"export-timeout:C2","to":"export-timeout:S1.C","type":"builds","label":null},{"from":"export-timeout:C2","to":"export-timeout:R2","type":"serves","label":null},{"from":"export-timeout:C2","to":"export-timeout:R6","type":"serves","label":null},{"from":"export-timeout:C2","to":"file:app/Jobs/BuildContactExport.php","type":"touches","label":null},{"from":"export-timeout:C2","to":"file:app/Models/ExportRequest.php","type":"touches","label":null},{"from":"export-timeout:C2","to":"file:config/filesystems.php","type":"touches","label":null},{"from":"export-timeout:C2:U1","to":"export-timeout:C2","type":"decided-during","label":null},{"from":"export-timeout:C3","to":"export-timeout","type":"in-run","label":null},{"from":"export-timeout:C3","to":"export-timeout:S1","type":"from","label":null},{"from":"export-timeout:C3","to":"export-timeout:S1.C","type":"builds","label":null},{"from":"export-timeout:C3","to":"export-timeout:R1","type":"serves","label":null},{"from":"export-timeout:C3","to":"file:app/Http/Controllers/ContactExportController.php","type":"touches","label":null},{"from":"export-timeout:C3","to":"file:routes/web.php","type":"touches","label":null},{"from":"export-timeout:C3","to":"file:resources/js/contacts/export-status.js","type":"touches","label":null},{"from":"export-timeout:C3:U1","to":"export-timeout:C3","type":"decided-during","label":null},{"from":"export-timeout:C4","to":"export-timeout","type":"in-run","label":null},{"from":"export-timeout:C4","to":"export-timeout:S2","type":"from","label":null},{"from":"export-timeout:C4","to":"export-timeout:S2.C","type":"builds","label":null},{"from":"export-timeout:C4","to":"export-timeout:R3","type":"serves","label":null},{"from":"export-timeout:C4","to":"file:app/Http/Controllers/ContactExportController.php","type":"touches","label":null},{"from":"export-timeout:C4:U1","to":"export-timeout:C4","type":"decided-during","label":null},{"from":"export-timeout:C5","to":"export-timeout","type":"in-run","label":null},{"from":"export-timeout:C5","to":"export-timeout:S3","type":"from","label":null},{"from":"export-timeout:C5","to":"export-timeout:S3.C","type":"builds","label":null},{"from":"export-timeout:C5","to":"export-timeout:R4","type":"serves","label":null},{"from":"export-timeout:C5","to":"export-timeout:R5","type":"serves","label":null},{"from":"export-timeout:C5","to":"file:app/Http/Controllers/ContactExportDownloadController.php","type":"touches","label":null},{"from":"export-timeout:C5","to":"file:app/Policies/ExportRequestPolicy.php","type":"touches","label":null},{"from":"export-timeout:C5","to":"file:app/Console/Commands/PurgeExpiredExports.php","type":"touches","label":null},{"from":"export-timeout:C5","to":"file:routes/console.php","type":"touches","label":null},{"from":"export-timeout:C5:U1","to":"export-timeout:C5","type":"decided-during","label":null},{"from":"export-timeout:C5:U2","to":"export-timeout:C5","type":"decided-during","label":null}],"holes":[{"kind":"requirement-failed","slug":"export-timeout","node":"export-timeout:R5","text":"R5 failed verification — see Problems found."},{"kind":"unplanned-decision","slug":"export-timeout","node":"export-timeout:C1:U1","text":"Commit 1: Stored the requesting account on the export row rather than deriving it from whoever owns the contact list. For a shared list those differ, and the solution never said which one should own the download."},{"kind":"unplanned-decision","slug":"export-timeout","node":"export-timeout:C1:U2","text":"Commit 1: Called the first state `requested` rather than `queued` — nothing is queued until commit 2 exists."},{"kind":"unplanned-decision","slug":"export-timeout","node":"export-timeout:C2:U1","text":"Commit 2: Recorded the failure reason as free text rather than a code. R6 only asks that failures are shown to the person; nothing reads it programmatically yet, and a code would need a list nobody has agreed."},{"kind":"unplanned-decision","slug":"export-timeout","node":"export-timeout:C3:U1","text":"Commit 3: Polls every 3 seconds. The solution said \"every few seconds\" and never picked a number."},{"kind":"unplanned-decision","slug":"export-timeout","node":"export-timeout:C4:U1","text":"Commit 4: Matched an existing export on contact list *and* requester, not on requester alone. Requester alone would hand someone exporting a second list the wrong file entirely."},{"kind":"unplanned-decision","slug":"export-timeout","node":"export-timeout:C5:U1","text":"Commit 5: Put the 24-hour window check on the query that lists exports on the contacts page, so expired ones stop being offered. The download route itself keeps only the owner check."},{"kind":"unplanned-decision","slug":"export-timeout","node":"export-timeout:C5:U2","text":"Commit 5: Clean-up runs nightly rather than hourly. The solution said downloads stop after 24 hours, not how quickly the files are deleted."}],"sources":[{"slug":"export-timeout","phase":"grilling","path":"ship-me/examples/export-timeout/1-grilling.md"},{"slug":"export-timeout","phase":"solution","path":"ship-me/examples/export-timeout/2-solutions.md"},{"slug":"export-timeout","phase":"build","path":"ship-me/examples/export-timeout/3-build.md"},{"slug":"export-timeout","phase":"verification","path":"ship-me/examples/export-timeout/4-verification.md"}]};
+var COLORS = {run:"#8b8985",requirement:"#2f6fd0",subproblem:"#7b4fd0",option:"#3f9e6b",commit:"#d08a2f",file:"#2f9ea0",unplanned:"#d0342f"};
+var LABELS = {subproblem:"sub-problem"};
+var KINDS = ["requirement","subproblem","option","commit","file","unplanned","run"];
+var RADIUS = {run:11,requirement:8,subproblem:8,option:5,commit:8,file:6,unplanned:6};
+var show = {}; KINDS.forEach(function(k){show[k]=k!=="run";});
+var onlyHoles = false, query = "";
+
+var cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+var W=0,H=0,dpr=window.devicePixelRatio||1;
+var nodes = DATA.nodes.map(function(n,i){
+  var col = KINDS.indexOf(n.kind); if (col<0) col=6;
+  return Object.assign({},n,{x:(col+1)*140+(Math.random()*60-30),y:200+((i*97)%520),vx:0,vy:0});
+});
+var byId = {}; nodes.forEach(function(n){byId[n.id]=n;});
+var links = DATA.edges.filter(function(e){return byId[e.from]&&byId[e.to];})
+  .map(function(e){return {s:byId[e.from],t:byId[e.to],type:e.type,label:e.label};});
+var deg = {}; links.forEach(function(l){deg[l.s.id]=(deg[l.s.id]||0)+1;deg[l.t.id]=(deg[l.t.id]||0)+1;});
+
+var tx=0,ty=0,scale=1,alpha=1,sel=null,hover=null;
+
+function visible(n){
+  if(!show[n.kind]) return false;
+  if(onlyHoles && !n.hole) return false;
+  if(query && (n.label+" "+(n.title||"")).toLowerCase().indexOf(query)<0) return false;
+  return true;
+}
+function resize(){
+  var r = document.getElementById("stage").getBoundingClientRect();
+  W=r.width; H=r.height;
+  cv.width=W*dpr; cv.height=H*dpr; cv.style.width=W+"px"; cv.style.height=H+"px";
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+function step(){
+  if(alpha<0.005) return;
+  var vis = nodes.filter(visible);
+  for(var i=0;i<vis.length;i++){
+    for(var j=i+1;j<vis.length;j++){
+      var a=vis[i],b=vis[j],dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy||1;
+      if(d2>250000) continue;
+      var f=6500/d2, d=Math.sqrt(d2), fx=dx/d*f, fy=dy/d*f;
+      a.vx-=fx;a.vy-=fy;b.vx+=fx;b.vy+=fy;
+    }
+  }
+  links.forEach(function(l){
+    if(!visible(l.s)||!visible(l.t)) return;
+    var dx=l.t.x-l.s.x,dy=l.t.y-l.s.y,d=Math.sqrt(dx*dx+dy*dy)||1;
+    var rest = l.type==="in-run"?260:150;
+    var f=(d-rest)*0.012;
+    l.s.vx+=dx/d*f; l.s.vy+=dy/d*f; l.t.vx-=dx/d*f; l.t.vy-=dy/d*f;
+  });
+  vis.forEach(function(n){
+    n.vx += (W/2-n.x)*0.0011; n.vy += (H/2-n.y)*0.0011;
+    n.vx*=0.86; n.vy*=0.86;
+    n.x+=n.vx*alpha; n.y+=n.vy*alpha;
+  });
+  alpha*=0.994;
+}
+function nbrs(n){
+  var s={}; links.forEach(function(l){ if(l.s===n)s[l.t.id]=1; if(l.t===n)s[l.s.id]=1; }); return s;
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.save(); ctx.translate(tx,ty); ctx.scale(scale,scale);
+  var focus = sel||hover, near = focus?nbrs(focus):null;
+  links.forEach(function(l){
+    if(!visible(l.s)||!visible(l.t)) return;
+    var on = !focus || l.s===focus || l.t===focus;
+    ctx.globalAlpha = on?0.55:0.07;
+    ctx.strokeStyle = l.type==="rejected" ? "#9a9894" : l.type==="decided-during" ? COLORS.unplanned : "#8a8884";
+    ctx.lineWidth = l.type==="in-run"?0.5:1;
+    if(l.type==="rejected"){ctx.setLineDash([3,3]);}else{ctx.setLineDash([]);}
+    ctx.beginPath(); ctx.moveTo(l.s.x,l.s.y); ctx.lineTo(l.t.x,l.t.y); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  nodes.forEach(function(n){
+    if(!visible(n)) return;
+    var on = !focus || n===focus || (near&&near[n.id]);
+    ctx.globalAlpha = on?1:0.12;
+    var r = RADIUS[n.kind]||6;
+    if(n.kind==="file") r = 5+Math.min(6,(n.runs||[]).length*2);
+    ctx.beginPath(); ctx.arc(n.x,n.y,r,0,6.2832);
+    ctx.fillStyle = n.kind==="option"&&!n.chosen ? "#9a9894" : COLORS[n.kind]||"#888";
+    ctx.fill();
+    if(n.hole){ ctx.strokeStyle="#d0342f"; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(n.x,n.y,r+3.5,0,6.2832); ctx.stroke(); }
+    if(n===sel){ ctx.strokeStyle=getComputedStyle(document.body).color; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(n.x,n.y,r+7,0,6.2832); ctx.stroke(); }
+    if(scale>0.55||n===focus){
+      ctx.globalAlpha = on?0.9:0.1;
+      ctx.fillStyle = getComputedStyle(document.body).color;
+      ctx.font = "10px ui-sans-serif,sans-serif"; ctx.textAlign="center";
+      ctx.fillText(n.kind==="file"?n.label.split("/").pop():n.label, n.x, n.y-r-5);
+    }
+  });
+  ctx.restore();
+}
+function loop(){ step(); draw(); requestAnimationFrame(loop); }
+
+function at(px,py){
+  var x=(px-tx)/scale, y=(py-ty)/scale, best=null, bd=1e9;
+  nodes.forEach(function(n){
+    if(!visible(n)) return;
+    var d=(n.x-x)*(n.x-x)+(n.y-y)*(n.y-y);
+    if(d<bd&&d<400){bd=d;best=n;}
+  });
+  return best;
+}
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function detail(n){
+  var el=document.getElementById("detail");
+  if(!n){ el.innerHTML='<span class="sub">Click a node.</span>'; return; }
+  var h='<div class="k">'+esc(LABELS[n.kind]||n.kind)+(n.slug?" &middot; "+esc(n.slug):"")+'</div>';
+  h+='<div class="t">'+esc(n.label)+(n.title?" — "+esc(n.title):"")+'</div>';
+  if(n.status) h+='<p><span class="badge">'+esc(n.status)+'</span></p>';
+  if(n.kind==="option") h+='<p><span class="badge">'+(n.chosen?"chosen":"rejected")+'</span></p>';
+  if(n.why) h+='<p><b>Why:</b> '+esc(n.why)+'</p>';
+  if(n.rejected) h+='<p><b>Why it lost:</b> '+esc(n.rejected)+'</p>';
+  if(n.doneWhen) h+='<p><b>Done when:</b> '+esc(n.doneWhen)+'</p>';
+  if(n.kind==="file") h+='<p><b>Runs:</b> '+esc((n.runs||[]).join(", "))+'</p>';
+  var outs=links.filter(function(l){return l.s===n;}), ins=links.filter(function(l){return l.t===n;});
+  function list(t,arr,side){
+    if(!arr.length) return "";
+    return "<p><b>"+t+"</b></p><ul>"+arr.map(function(l){
+      var o=side==="out"?l.t:l.s;
+      return "<li>"+esc(l.type)+" &rarr; "+esc(o.label)+(o.title?" <span class=sub>"+esc(o.title)+"</span>":"")+"</li>";
+    }).join("")+"</ul>";
+  }
+  h+=list("Points to",outs,"out")+list("Pointed to by",ins,"in");
+  var mine=DATA.holes.filter(function(x){return x.node===n.id;});
+  if(mine.length) h+='<p class="hole"><b>Holes</b></p><ul class="hole">'+mine.map(function(x){return "<li>"+esc(x.text)+"</li>";}).join("")+"</ul>";
+  el.innerHTML=h;
+}
+
+var leg=document.getElementById("legend");
+KINDS.forEach(function(k){
+  var id="k_"+k;
+  var l=document.createElement("label");
+  l.innerHTML='<input type="checkbox" id="'+id+'"'+(show[k]?" checked":"")+'><span class="dot" style="background:'+COLORS[k]+'"></span>'+(LABELS[k]||k);
+  leg.appendChild(l);
+  l.querySelector("input").addEventListener("change",function(e){show[k]=e.target.checked;alpha=Math.max(alpha,0.35);});
+});
+document.getElementById("onlyholes").addEventListener("change",function(e){onlyHoles=e.target.checked;alpha=Math.max(alpha,0.35);});
+document.getElementById("q").addEventListener("input",function(e){query=e.target.value.toLowerCase();alpha=Math.max(alpha,0.35);});
+document.getElementById("counts").textContent =
+  DATA.nodes.length+" nodes · "+links.length+" edges · "+DATA.holes.length+" holes";
+var hh=document.getElementById("holes"), grouped={};
+DATA.holes.forEach(function(h){(grouped[h.kind]=grouped[h.kind]||[]).push(h);});
+hh.innerHTML = Object.keys(grouped).map(function(k){
+  return '<p class="k">'+esc(k)+" ("+grouped[k].length+')</p><ul class="hole">'+grouped[k].map(function(h){
+    return '<li data-id="'+esc(h.node)+'">'+esc(h.text)+"</li>";}).join("")+"</ul>";
+}).join("") || '<span class="sub">None.</span>';
+hh.addEventListener("click",function(e){
+  var li=e.target.closest("li"); if(!li) return;
+  var n=byId[li.getAttribute("data-id")]; if(!n) return;
+  show[n.kind]=true; document.getElementById("k_"+n.kind).checked=true;
+  sel=n; detail(n); alpha=0;
+  tx=W/2-n.x*scale; ty=H/2-n.y*scale;
+});
+
+var dragging=false,lx=0,ly=0,moved=false;
+cv.addEventListener("mousedown",function(e){dragging=true;moved=false;lx=e.clientX;ly=e.clientY;cv.classList.add("drag");});
+window.addEventListener("mouseup",function(e){
+  cv.classList.remove("drag");
+  if(dragging&&!moved){var r=cv.getBoundingClientRect();sel=at(e.clientX-r.left,e.clientY-r.top);detail(sel);}
+  dragging=false;
+});
+window.addEventListener("mousemove",function(e){
+  if(dragging){ if(Math.abs(e.clientX-lx)+Math.abs(e.clientY-ly)>3) moved=true;
+    tx+=e.clientX-lx; ty+=e.clientY-ly; lx=e.clientX; ly=e.clientY; return; }
+  var r=cv.getBoundingClientRect();
+  if(e.clientX<r.left) return;
+  hover=at(e.clientX-r.left,e.clientY-r.top);
+});
+cv.addEventListener("wheel",function(e){
+  e.preventDefault();
+  var r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
+  var k=Math.exp(-e.deltaY*0.0015), ns=Math.min(4,Math.max(0.2,scale*k));
+  tx=mx-(mx-tx)*(ns/scale); ty=my-(my-ty)*(ns/scale); scale=ns;
+},{passive:false});
+window.addEventListener("resize",resize);
+resize(); loop();
+</script></body></html>
