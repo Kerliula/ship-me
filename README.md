@@ -52,12 +52,45 @@ Each phase hands its markdown file to the next one, so the reasoning is on disk
 and reviewable instead of buried in a chat log. Each skill is also usable on its
 own — `/grill-me` alone is worth it for anything you don't fully understand yet.
 
+## Where each phase runs
+
+Invoking a skill doesn't reset your session. It loads instructions into the
+conversation you're already in, and context keeps accumulating. What `/ship-me`
+does instead is more selective:
+
+| Phase | Runs in |
+|---|---|
+| `/grill-me` | your session |
+| `/solve-me` | **a spawned session** — no memory of yours |
+| `/build-me` | your session |
+| `/verify-me` | **a spawned session** |
+| `/test-me` | **a spawned session** |
+
+The split is interactive versus not. `/grill-me` is a dialogue and `/build-me`
+stops after every commit for you to review — neither can be spawned, because
+you're in the loop. The other three take a file in and write a file out, so
+they get a fresh agent with a fully self-contained prompt.
+
+They're spawned so they **can't** see the conversation that produced their
+input. If `/solve-me` could read the interrogation, it would inherit your
+framing and its own earlier guesses instead of reading the write-up cold. The
+file is the interface, and a session with no memory is what proves the file
+actually stands on its own.
+
+Run a skill by hand — `/solve-me` typed by you — and nothing is spawned at
+all; it runs right where you are.
+
+One consequence worth knowing: your session carries the whole interrogation
+*and* every commit review, so it's the long-lived one. That's deliberate —
+`/build-me` needs the requirements and the conventions it learned from your
+codebase — but it's why the three spawned phases are the cheap ones.
+
 ## The map
 
 The pipeline skills already write down everything a graph needs: R-numbers,
 sub-problems, options with the reason each one lost, commits with the
-requirement they serve and the files they touched, and a coverage table saying which
-requirements were actually proven. `/map-me` reads those four files and
+requirement they serve and the files they touched, and a coverage table
+saying which requirements were actually proven. `/map-me` reads those four files and
 draws it.
 
 ```bash
@@ -139,6 +172,11 @@ gate, not a formality.
 
 **A test that can't fail is worse than no test.** It's false confidence with a
 green checkmark.
+
+**The file is the interface.** Every phase reads a written artifact, not a
+chat log — and the three non-interactive phases run with no memory of your
+session, so a write-up that only makes sense in context fails loudly instead
+of quietly.
 
 **The decisions nobody approved are the ones that bite.** Every other choice
 in this pipeline passes a gate. The ones made mid-commit don't — so
