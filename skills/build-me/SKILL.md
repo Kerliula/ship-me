@@ -115,6 +115,10 @@ The plan is also the only durable record of what happened, so two of
 those lines get rewritten later rather than staying as they were
 approved — see Step 4.
 
+Once the plan file exists, refresh the map (see below) — at this stage
+it catches an approved requirement the plan doesn't cover, before a
+line of code is written.
+
 Then **stop and ask the developer to approve the plan** — approve,
 reorder, merge, split, or drop commits. Do not write a single line of
 code before they've said yes. If they change it, update the file
@@ -203,13 +207,16 @@ Once the commit's code is written:
      something and this is what I picked" is exactly the kind of entry
      that belongs here.
 
-3. Say the same unplanned decisions out loud to the developer too, and
+3. Refresh the map (see below). This is the step that matters most —
+   it is where the file paths and the mid-build decisions you just
+   wrote actually enter the graph.
+4. Say the same unplanned decisions out loud to the developer too, and
    flag anything you're unsure about.
-4. Suggest a commit message for this commit, matching this repo's
+5. Suggest a commit message for this commit, matching this repo's
    existing commit style (check `git log` if unsure). Present it as a
    suggestion only — do not run `git commit` yourself unless the
    developer explicitly asks you to.
-5. **Stop.** Wait for the developer to review, edit, or approve before
+6. **Stop.** Wait for the developer to review, edit, or approve before
    moving to the next commit. Never chain commits on your own
    initiative, even if the plan is long. If the developer explicitly
    pre-approves a named range ("build 3 through 5 without stopping"),
@@ -220,6 +227,31 @@ Once the commit's code is written:
 When the developer comes back (possibly with edits, possibly just
 "next"), pick up with the next commit in the plan, re-checking Step 1's
 conventions against anything they changed.
+
+---
+
+## Refresh the map
+
+You just wrote something the map is built from, so bring it up to date
+before moving on:
+
+```bash
+node ~/.claude/skills/map-me/map-me.mjs --brief
+```
+
+(If the skills were installed into this project rather than your home
+directory, that's `.claude/skills/map-me/map-me.mjs`. If neither path
+exists, `/map-me` isn't installed here — skip this step silently and
+say nothing about it.)
+
+`--brief` prints nothing at all unless something changed. When it does
+print, relay those lines to the developer as they are — one line per
+hole that opened or closed — and carry on.
+
+**It is never a gate.** Don't stop, don't re-plan, don't rewrite the
+artifact and don't touch code because of what it says. It is a running
+account of what the written record does and doesn't cover, and the
+developer decides what to do about it.
 
 ---
 
@@ -236,6 +268,9 @@ conventions against anything they changed.
   `none`). Never leave a built commit carrying the plan's guesses.
 - Never write `Unplanned: none` to save a step. An empty list and a
   missing record look identical later and mean opposite things.
+- Refresh the map after writing the plan and after every commit. It is
+  a report, never a gate — it does not pause the build or change what
+  gets built.
 - Nothing on the out-of-scope list gets built, however small or
   convenient it looks while you're already in the file.
 - One commit, one stop, by default. Never chain commits on your own
@@ -271,6 +306,8 @@ conventions against anything they changed.
 - Every built commit's section in `docs/build/<slug>.md` carries the
   real file paths it touched, in backticks, and an `Unplanned:` list
   of what got decided mid-build (or `none`).
+- The map was refreshed after the plan was written and after every
+  commit, and anything it reported was passed on rather than acted on.
 - A commit message was suggested for every commit.
 - No option was implemented other than the one already recommended in
   the solve-me file, unless the developer explicitly changed it.

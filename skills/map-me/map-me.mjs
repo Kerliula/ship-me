@@ -31,6 +31,9 @@ const USAGE = `map-me — build the comprehension map from ship-me artifacts
   --docs <dir>   where the pipeline artifacts live      (default: docs)
   --out <dir>    where to write the map                 (default: <docs>/map)
   --slug <slug>  only map this one run
+  --brief        print only what changed since the last run, nothing if
+                 nothing changed; stays silent when there is no project
+                 to map. For calling after every artifact write.
   --quiet        no stdout summary
   --help         this text
 
@@ -52,9 +55,11 @@ const DOCS_ARG = opt('docs', 'docs');
 const DOCS = resolve(DOCS_ARG);
 const OUT = resolve(opt('out', join(DOCS_ARG, 'map')));
 const ONLY = opt('slug', null);
-const QUIET = has('quiet');
+const BRIEF = has('brief');
+const QUIET = has('quiet') || BRIEF;
 
 if (!existsSync(DOCS)) {
+  if (BRIEF) process.exit(0); // nothing written yet — not an error mid-pipeline
   console.error('map-me: no such directory: ' + DOCS_ARG);
   console.error('Run it from the project root, or pass --docs <dir>.');
   process.exit(1);
@@ -118,6 +123,8 @@ function blocks(text, depth) {
 }
 
 const unbold = (s) => s.replace(/\*\*/g, '');
+/** `_(filled in later)_`, `<files / areas>`, `TBD` — a slot, not a value. */
+const isPlaceholder = (v) => /^[_*\s]*\(.*\)[_*\s]*$/.test(v) || /^<.*>$/.test(v) || /^(tbd|todo)\b/i.test(v);
 const isFieldLine = (plain) => /^\s*(?:[-*]\s*)?[A-Za-z][\w '/-]{0,30}\s*:\s/.test(plain);
 
 /** Read `**Name:** value`, `- Name: value`, with wrapped continuation lines. */
@@ -152,6 +159,9 @@ function listField(body, name) {
     const indent = m[1].length;
     const items = [];
     const inline = m[2].trim();
+    // An unfilled template slot means the field isn't written yet, which is
+    // different from an empty list — "none" is an answer, a placeholder isn't.
+    if (isPlaceholder(inline)) return null;
     if (inline && !/^(none|n\/a|-)\.?$/i.test(inline)) items.push(inline);
     for (let j = i + 1; j < lines.length; j++) {
       const raw = lines[j];
@@ -271,6 +281,11 @@ function parseBuild(text) {
       filesResolved: files.length > 0,
       unplanned: listField(b.body, 'Unplanned'),
     });
+    // build-me writes real paths and an Unplanned record only after the code
+    // exists, so either one means this commit has actually been built. Without
+    // them it is still just an approved plan, and holes about it are premature.
+    const c = commits[commits.length - 1];
+    c.built = c.filesResolved || c.unplanned !== null;
   }
   return { commits };
 }
@@ -322,6 +337,7 @@ for (const path of walk(DOCS)) {
 }
 
 if (runs.size === 0) {
+  if (BRIEF) process.exit(0);
   console.error('map-me: found no ship-me artifacts under ' + DOCS_ARG);
   console.error('Expected files written by /grill-me, /solve-me, /build-me or /verify-me.');
   process.exit(1);
@@ -416,19 +432,20 @@ for (const run of runs.values()) {
     if (!c.doneWhen) {
       hole('no-falsifier', S, cid, 'Commit ' + c.n + ' has no **Done when:** — nothing states how you would know it is wrong.');
     }
-    if (!c.filesResolved) {
+    if (c.built && !c.filesResolved) {
       hole('unresolved-touches', S, cid,
-        'Commit ' + c.n + ' still has the plan’s prose in **Touches:** instead of real paths. ' +
-        'It cannot be linked to any file.');
+        'Commit ' + c.n + ' was built but still has the plan’s prose in **Touches:** ' +
+        'instead of real paths. It cannot be linked to any file.');
     }
     for (const f of c.files) {
       addNode({ id: 'file:' + f, kind: 'file', slug: null, label: f, path: f });
       addEdge(cid, 'file:' + f, 'touches');
     }
-    if (c.unplanned === null) {
+    if (c.built && c.unplanned === null) {
       hole('unplanned-not-recorded', S, cid,
-        'Commit ' + c.n + ' never recorded an **Unplanned:** line. Either nothing was decided mid-build, or it was decided and lost.');
-    } else {
+        'Commit ' + c.n + ' was built but never recorded an **Unplanned:** line. Either nothing ' +
+        'was decided mid-build, or it was decided and lost.');
+    } else if (c.unplanned !== null) {
       c.unplanned.forEach((u, i) => {
         const uid = cid + ':U' + (i + 1);
         addNode({ id: uid, kind: 'unplanned', slug: S, label: 'C' + c.n + '.U' + (i + 1), title: u });
@@ -452,14 +469,26 @@ for (const run of runs.values()) {
       hole('requirement-failed', S, rid, r.id + ' failed verification' + (cov.note ? ' — ' + cov.note : '') + '.');
     } else if (cov && cov.status === 'skipped') {
       hole('requirement-skipped', S, rid, r.id + ' was skipped during verification' + (cov.note ? ' — ' + cov.note : '') + '.');
-    } else if (!hasVerification && commits.length) {
-      hole('run-not-verified', S, rid, r.id + ' has been built but never verified — no /verify-me file for this run.');
     }
   }
 
-  for (const phase of ['grilling', 'solution', 'build', 'verification']) {
-    if (!run.files[phase]) {
-      hole('phase-missing', S, S, 'This run has no ' + phase + ' artifact.');
+  // One line for the whole run, not one per requirement — every requirement is
+  // unproven for the same single reason, and the status on each node says so.
+  if (!hasVerification && reqs.length && commits.some((c) => c.built)) {
+    hole('run-not-verified', S, S,
+      'Code has been built and never verified — ' + reqs.length +
+      ' requirement(s) still unproven. No /verify-me file for this run.');
+  }
+
+  // A missing *later* phase just means the pipeline hasn't got there yet.
+  // A missing *earlier* one means something was built with no written source.
+  const order = ['grilling', 'solution', 'build', 'verification'];
+  const present = order.map((ph) => Boolean(run.files[ph]));
+  const furthest = present.lastIndexOf(true);
+  for (let i = 0; i < furthest; i++) {
+    if (!present[i]) {
+      hole('phase-missing', S, S,
+        'This run has a ' + order[furthest] + ' artifact but no ' + order[i] + ' one.');
     }
   }
 }
@@ -502,6 +531,9 @@ function noteName(id) {
 const link = (id) => '[[' + noteName(id) + ']]';
 
 const out = (...p) => join(OUT, ...p);
+// Read the last map before clearing the folder — the delta is computed from it.
+let previousRaw = null;
+try { previousRaw = readFileSync(join(OUT, 'map.json'), 'utf8'); } catch { /* first run */ }
 if (existsSync(OUT)) rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 
@@ -671,6 +703,14 @@ for (const run of runs.values()) {
   index.push('');
 }
 writeFileSync(out('_index.md'), index.join('\n'));
+
+const key = (h) => h.kind + '\u0000' + h.text;
+let previous = null;
+try { previous = JSON.parse(previousRaw); } catch { /* first run or unreadable */ }
+const before = new Set((previous && previous.holes || []).map(key));
+const after = new Set(holes.map(key));
+const opened = holes.filter((h) => !before.has(key(h)));
+const closed = (previous && previous.holes || []).filter((h) => !after.has(key(h)));
 
 const data = { generated: new Date().toISOString(), nodes: [...nodes.values()], edges, holes, sources };
 writeFileSync(out('map.json'), JSON.stringify(data, null, 2));
@@ -906,7 +946,19 @@ resize(); loop();
 
 writeFileSync(out('index.html'), HTML.replace('__MAP_DATA__', JSON.stringify(data)));
 
-if (!QUIET) {
+const rel = OUT.replace(process.cwd() + '/', '');
+
+if (BRIEF) {
+  if (opened.length || closed.length) {
+    const bits = [];
+    if (opened.length) bits.push('+' + opened.length + ' hole' + (opened.length > 1 ? 's' : ''));
+    if (closed.length) bits.push('-' + closed.length + ' closed');
+    const trim = (t) => (t.length > 116 ? t.slice(0, 113).trimEnd() + '...' : t);
+    console.log('map: ' + bits.join(', ') + '  (' + rel + '/index.html)');
+    for (const h of opened) console.log('  + ' + (HOLE_TITLES[h.kind] || h.kind) + ' — ' + trim(h.text));
+    for (const h of closed) console.log('  - closed: ' + trim(h.text));
+  }
+} else if (!QUIET) {
   const count = (k) => [...nodes.values()].filter((n) => n.kind === k).length;
   console.log('map-me — ' + runs.size + ' run(s), ' + nodes.size + ' nodes, ' + edges.length + ' edges');
   console.log('  ' + [['requirement', 'requirement'], ['subproblem', 'sub-problem'],
@@ -916,5 +968,9 @@ if (!QUIET) {
   const grouped = {};
   for (const h of holes) (grouped[h.kind] ||= []).push(h);
   for (const [k, v] of Object.entries(grouped)) console.log('    ' + String(v.length).padStart(3) + '  ' + (HOLE_TITLES[k] || k));
-  console.log('  wrote ' + OUT.replace(process.cwd() + '/', '') + '/{index.html,HOLES.md,map.json,*.md}');
+  // On a first run everything is "new", which says nothing — skip the delta.
+  if (previous && (opened.length || closed.length)) {
+    console.log('  since last run: +' + opened.length + ' hole(s), -' + closed.length + ' closed');
+  }
+  console.log('  wrote ' + rel + '/{index.html,HOLES.md,map.json,*.md}');
 }

@@ -212,6 +212,31 @@ marked as holding or, if not, how the solution was adjusted>
 
 ---
 
+## Refresh the map
+
+You just wrote something the map is built from, so bring it up to date
+before moving on:
+
+```bash
+node ~/.claude/skills/map-me/map-me.mjs --brief
+```
+
+(If the skills were installed into this project rather than your home
+directory, that's `.claude/skills/map-me/map-me.mjs`. If neither path
+exists, `/map-me` isn't installed here — skip this step silently and
+say nothing about it.)
+
+`--brief` prints nothing at all unless something changed. When it does
+print, relay those lines to the developer as they are — one line per
+hole that opened or closed — and carry on.
+
+**It is never a gate.** Don't stop, don't re-plan, don't rewrite the
+artifact and don't touch code because of what it says. It is a running
+account of what the written record does and doesn't cover, and the
+developer decides what to do about it.
+
+---
+
 ## What this skill does NOT do
 
 - It does not write code.
@@ -253,6 +278,6 @@ marked as holding or, if not, how the solution was adjusted>
   normal case, the edge cases, and the "must always stay true" rules.
 - Any conflict between sub-problems has been resolved and explained.
 - Everything has been saved to one markdown file at a path the
-  developer knows.
+  developer knows, and the map was refreshed afterwards.
 
 Then hand off — implementation can begin from this file.

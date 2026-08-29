@@ -69,6 +69,30 @@ one note per node that opens as an Obsidian vault. No dependencies, no
 network, no tokens: a script parses, and `/map-me` reads the result back to
 you in plain language.
 
+**The map stays current on its own.** Every skill that writes an artifact
+refreshes it immediately afterwards — grill-me and solve-me when they save,
+build-me when the commit plan lands and again after every single commit,
+verify-me when it reports. Those refreshes run with `--brief`, which prints
+only the holes that opened or closed since the last one and prints nothing
+when nothing changed. So during a build you see a line or two per commit:
+
+```
+map: +2 holes  (docs/map/index.html)
+  + Decided mid-build, never approved at a gate — Commit 5: Put the 24-hour
+    window check on the query that lists exports on the contacts page...
+```
+
+None of it is a gate. Nothing pauses, nothing gets fixed automatically — it
+is a running account of what the written record covers, and what to do about
+it is yours to decide.
+
+Holes about work that hasn't happened yet are suppressed, so the early phases
+stay silent: a commit is only judged once it's actually been built, and a
+phase you haven't reached isn't a hole.
+
+`docs/map/` is generated. Commit it if you want a diffable record of when
+each hole opened, or add it to `.gitignore` — both work.
+
 Its job is not to pretty-print the structure — you can read that in the four
 markdown files. Its job is the part you **can't** see from inside any single
 run:

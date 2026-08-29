@@ -512,9 +512,35 @@ person, or for a future session).
   issue, PR description, or commit body.
 - Number the requirements `R1, R2, …`. Later phases refer back to
   these numbers, so don't renumber them afterwards.
-- Tell the developer the file path once it's written.
+- Tell the developer the file path once it's written, then refresh the
+   map (see below).
 - Don't put any code, framework names, or implementation details in
   this file — it's the problem, not the solution.
+
+---
+
+## Refresh the map
+
+You just wrote something the map is built from, so bring it up to date
+before moving on:
+
+```bash
+node ~/.claude/skills/map-me/map-me.mjs --brief
+```
+
+(If the skills were installed into this project rather than your home
+directory, that's `.claude/skills/map-me/map-me.mjs`. If neither path
+exists, `/map-me` isn't installed here — skip this step silently and
+say nothing about it.)
+
+`--brief` prints nothing at all unless something changed. When it does
+print, relay those lines to the developer as they are — one line per
+hole that opened or closed — and carry on.
+
+**It is never a gate.** Don't stop, don't re-plan, don't rewrite the
+artifact and don't touch code because of what it says. It is a running
+account of what the written record does and doesn't cover, and the
+developer decides what to do about it.
 
 ---
 

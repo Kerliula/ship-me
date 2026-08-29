@@ -200,6 +200,12 @@ what was built, what was tested, and anything
 still open (dropped test candidates, unresolved trade-offs the
 spawned phases flagged).
 
+Every phase already refreshed the map as it wrote its file, so by now
+it is current — those refreshes are the phase's own job, and a spawned
+phase does its own. Don't run them on its behalf, and don't treat a
+hole a phase reported as a reason to hold up the pipeline: none of them
+are gates.
+
 Then run `/map-me` in this conversation. It rebuilds the map across
 every run in the project, not just this one, and reports what the
 artifacts don't account for — requirements nothing proved, decisions
@@ -269,5 +275,6 @@ description or commit body.
 - The developer has the four output docs and the final test suite,
   plus a short summary tying the whole run together and the
   copy-paste requirements block.
-- `/map-me` ran at the end, and anything it found was reported rather
-  than quietly fixed.
+- Each phase refreshed the map as it wrote its artifact, and `/map-me`
+  ran at the end. Anything either found was reported rather than
+  quietly fixed, and nothing was held up because of it.

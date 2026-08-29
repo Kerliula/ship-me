@@ -47,7 +47,24 @@ Options:
 - `--docs <dir>` — where the artifacts live (default `docs`)
 - `--out <dir>` — where the map goes (default `<docs>/map`)
 - `--slug <slug>` — map one run only
+- `--brief` — print only what changed since the last run
 - `--quiet` — no stdout summary
+
+### Two modes
+
+`/map-me` invoked by the developer uses the **full** mode above: it
+rebuilds everything and you read the holes back in priority order.
+
+The other five skills call the same script with `--brief` every time
+they write an artifact, so the map is never stale mid-pipeline. In that
+mode it prints only the holes that opened or closed since the last run,
+and prints nothing at all when nothing changed. That's deliberate: a
+map that re-reports all sixteen holes after every commit is a map
+people stop reading, which is the problem this whole thing exists to
+fix.
+
+`--brief` also exits quietly when there's nothing to map yet, so an
+early phase can call it safely.
 
 It writes:
 
@@ -120,6 +137,11 @@ to make it legitimate to skim most of it.
   than listing every commit.
 - Never invent a node that isn't in an artifact. If the map looks thin,
   the artifacts are thin — that's the finding.
+- Holes about work that hasn't happened yet are suppressed on purpose:
+  a commit is only judged once it has been built (real paths or an
+  `Unplanned:` record), and a missing later phase is not a hole. If you
+  find yourself explaining that something is "just not done yet", the
+  script should have filtered it — say so rather than reporting it.
 
 ---
 
