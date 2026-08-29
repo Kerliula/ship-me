@@ -38,12 +38,12 @@ exists and to avoid building something that was explicitly ruled out.
 
 If you don't have one, ask for it. Don't invent a solution yourself —
 that's what `/grill-me` and `/solve-me` are for. If the write-up looks
-thin, contradictory, missing a clear recommendation for a piece, or
+thin, contradictory, missing a clear recommendation for a sub-problem, or
 lists anything under "Open trade-offs", stop and say so instead of
 guessing — ask the developer to rule on each open trade-off before
 writing the plan.
 
-**Use the option that was already picked.** Every piece in the
+**Use the option that was already picked.** Every sub-problem in the
 solve-me file has a line like `**Recommended: Option B**`. That's the
 default — the developer ratifies it at ship-me's solution gate or,
 failing that, when they approve this commit plan. Build that one, not
@@ -59,7 +59,7 @@ Before writing anything, look at how similar things are already built
 in this codebase: naming, folder placement, how classes are structured
 (actions, requests, resources, jobs, policies, etc.), how validation is
 done, how tests are written, how errors are handled. Use CodeGraph or
-search the codebase for the closest existing example to each piece
+search the codebase for the closest existing example to each sub-problem
 you're about to build.
 
 New code should look like it was written by the same person who wrote
@@ -72,16 +72,16 @@ covers the case.
 ## Step 2 — Cut the work into commits, write the plan down, get it approved
 
 Deciding the commit boundaries is **this phase's job** — `/solve-me`
-deliberately doesn't do it. Its pieces are units of thinking; you turn
+deliberately doesn't do it. Its sub-problems are units of thinking; you turn
 them into units of committing, against the real codebase.
 
-Use the pieces from the solve-me file as your starting point — don't
-re-split the problem itself. Commit order follows the piece order —
-commit 1 comes from piece 1, and so on. Use the "How the pieces fit
+Use the sub-problems from the solve-me file as your starting point — don't
+re-split the problem itself. Commit order follows the sub-problem order —
+commit 1 comes from sub-problem 1, and so on. Use the "How the sub-problems fit
 together" section only to sanity-check that this order is buildable;
 if it isn't, that's the stop-and-ask case below, not a license to
-reorder. A piece may be split into several commits (1a, 1b), but
-pieces are never resequenced.
+reorder. A sub-problem may be split into several commits (1a, 1b), but
+sub-problems are never resequenced.
 
 Keep commits small: one commit should be reviewable in a few minutes,
 and should leave the app in a working state.
@@ -98,16 +98,26 @@ Solution: docs/solutions/<slug>.md
 Problem:  docs/grilling/<slug>.md
 
 ## Commit 1 — <short imperative title>
-- **From:** piece 1 of the solution
-- **Builds:** Option <X> of piece 1 — <one-line reason it won>
+- **From:** sub-problem 1 of the solution
+- **Builds:** Option <X> of sub-problem 1 — <one-line reason it won>
 - **Serves:** R2, R5
 - **Why we need it:** <one or two plain sentences, straight from the
   requirement — what the app can't do without this>
-- **Touches:** <files / areas>
+- **Touches:** <files / areas — prose is fine here; this line gets
+  rewritten with real paths once the commit is built>
 - **Done when:** <the observable thing that is true afterwards>
+- **Unplanned:** _(filled in after the commit is built — leave it)_
 
 ## Commit 2 — …
 ```
+
+The plan is also the only durable record of what happened, so two of
+those lines get rewritten later rather than staying as they were
+approved — see Step 4.
+
+Once the plan file exists, refresh the map (see below) — at this stage
+it catches an approved requirement the plan doesn't cover, before a
+line of code is written.
 
 Then **stop and ask the developer to approve the plan** — approve,
 reorder, merge, split, or drop commits. Do not write a single line of
@@ -118,7 +128,7 @@ If the plan is a single commit, fold the two gates into one: present
 the plan and ask "approve and build it?" — one yes covers both.
 
 If a commit genuinely can't be built in its slot because it needs
-something a later piece creates, say so now, name what it needs, and
+something a later sub-problem creates, say so now, name what it needs, and
 let the developer decide — never resolve it silently mid-build.
 
 ---
@@ -163,13 +173,50 @@ Once the commit's code is written:
    and restate in one or two plain sentences **why this was needed** —
    which requirement (R-number) it satisfies and what the app can now
    do that it couldn't before. Short: three lines, not an essay.
-2. Point out anything you're unsure about or any assumption you had to
-   make that wasn't covered in the solve-me file.
-3. Suggest a commit message for this commit, matching this repo's
+2. **Go back to `docs/build/<slug>.md` and update this commit's
+   section.** Two lines change:
+
+   - **`Touches:`** — replace the plan's prose with the real files you
+     actually changed, each in backticks, comma-separated, as paths
+     relative to the repo root:
+
+     ```
+     - **Touches:** `app/Models/ExportRequest.php`, `app/Http/Controllers/ExportController.php`
+     ```
+
+     Backticked paths are what makes this commit linkable to the files
+     it changed. Prose here is unlinkable, so the connection is lost.
+
+   - **`Unplanned:`** — every decision you made while writing this
+     commit that the solve-me file didn't already settle. One line
+     each, nested under the field. Write `none` only when there
+     genuinely were none:
+
+     ```
+     - **Unplanned:**
+       - Sorted by created date rather than name — the solution never said,
+         and the list looked random without it.
+       - Kept the old column instead of dropping it; dropping it would have
+         broken the report page, which is out of scope.
+     ```
+
+     This is the important one. Every other decision in this pipeline
+     went through a gate the developer approved. These didn't — they
+     were made while the code was being written, and if they only get
+     said in chat they're gone. Small ones count. "I had to pick
+     something and this is what I picked" is exactly the kind of entry
+     that belongs here.
+
+3. Refresh the map (see below). This is the step that matters most —
+   it is where the file paths and the mid-build decisions you just
+   wrote actually enter the graph.
+4. Say the same unplanned decisions out loud to the developer too, and
+   flag anything you're unsure about.
+5. Suggest a commit message for this commit, matching this repo's
    existing commit style (check `git log` if unsure). Present it as a
    suggestion only — do not run `git commit` yourself unless the
    developer explicitly asks you to.
-4. **Stop.** Wait for the developer to review, edit, or approve before
+6. **Stop.** Wait for the developer to review, edit, or approve before
    moving to the next commit. Never chain commits on your own
    initiative, even if the plan is long. If the developer explicitly
    pre-approves a named range ("build 3 through 5 without stopping"),
@@ -183,6 +230,31 @@ conventions against anything they changed.
 
 ---
 
+## Refresh the map
+
+You just wrote something the map is built from, so bring it up to date
+before moving on:
+
+```bash
+node ~/.claude/skills/map-me/map-me.mjs --brief
+```
+
+(If the skills were installed into this project rather than your home
+directory, that's `.claude/skills/map-me/map-me.mjs`. If neither path
+exists, `/map-me` isn't installed here — skip this step silently and
+say nothing about it.)
+
+`--brief` prints nothing at all unless something changed. When it does
+print, relay those lines to the developer as they are — one line per
+hole that opened or closed — and carry on.
+
+**It is never a gate.** Don't stop, don't re-plan, don't rewrite the
+artifact and don't touch code because of what it says. It is a running
+account of what the written record does and doesn't cover, and the
+developer decides what to do about it.
+
+---
+
 ## Rules
 
 - Build the recommended option from solve-me, exactly as chosen. Flag
@@ -191,6 +263,14 @@ conventions against anything they changed.
   approved by the developer before any code is written.
 - Every commit names the requirement(s) it serves, before and after
   it's built. A commit that serves no requirement doesn't get built.
+- **After every commit, `docs/build/<slug>.md` gets updated**: real
+  backticked file paths in `Touches:`, and an `Unplanned:` list (or
+  `none`). Never leave a built commit carrying the plan's guesses.
+- Never write `Unplanned: none` to save a step. An empty list and a
+  missing record look identical later and mean opposite things.
+- Refresh the map after writing the plan and after every commit. It is
+  a report, never a gate — it does not pause the build or change what
+  gets built.
 - Nothing on the out-of-scope list gets built, however small or
   convenient it looks while you're already in the file.
 - One commit, one stop, by default. Never chain commits on your own
@@ -223,6 +303,11 @@ conventions against anything they changed.
   reason tied to a requirement number.
 - All non-obvious logic has a short `// WHY:` comment in plain
   language, tied to the choice made in the solve-me file.
+- Every built commit's section in `docs/build/<slug>.md` carries the
+  real file paths it touched, in backticks, and an `Unplanned:` list
+  of what got decided mid-build (or `none`).
+- The map was refreshed after the plan was written and after every
+  commit, and anything it reported was passed on rather than acted on.
 - A commit message was suggested for every commit.
 - No option was implemented other than the one already recommended in
   the solve-me file, unless the developer explicitly changed it.

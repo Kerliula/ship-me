@@ -11,14 +11,14 @@
 
 ## How this was split
 
-- **Piece 1 — getting the file to someone when it can't be made instantly.**
+- **Sub-problem 1 — getting the file to someone when it can't be made instantly.**
   This is the core of the complaint and drives everything else.
-- **Piece 2 — what happens when someone asks twice.** Separable: it only
+- **Sub-problem 2 — what happens when someone asks twice.** Separable: it only
   matters once making the file takes time.
-- **Piece 3 — who may download a finished file, and for how long.**
+- **Sub-problem 3 — who may download a finished file, and for how long.**
   Separable: it's about the finished file, not about making it.
 
-## Piece 1 — How does someone get a file that takes too long to make on the spot?
+## Sub-problem 1 — How does someone get a file that takes too long to make on the spot?
 
 **Serves:** R1, R2, R6
 
@@ -32,6 +32,9 @@
   pick. It postpones the problem instead of removing it, and the biggest
   accounts — the ones complaining — are exactly the ones it still fails.
 
+**Rejected:** Postpones the problem instead of removing it. The accounts big enough
+to complain are exactly the ones that still fail at any limit you pick.
+
 ### Option B — Make it in the background, send a link by email
 
 - How it works: write down the request, answer immediately, build the
@@ -42,6 +45,9 @@
   sitting on the page watching has no idea what's happening.
 - Breaks down when: the export takes ten seconds — sending an email for
   that feels absurd, and the person is still on the page waiting.
+
+**Rejected:** Leaves the person on the page with no idea what's happening, and takes on
+a dependency on email that this problem doesn't need yet.
 
 ### Option C — Make it in the background, let the page check on it
 
@@ -67,6 +73,9 @@
 - Breaks down when: anything between the person and the app times out
   mid-stream, which for very large accounts is common.
 
+**Rejected:** A dropped connection leaves a partial file that looks complete, which
+breaks "an export that says ready is never partial" outright.
+
 **Recommended: Option C**
 **Why:** It's the only option that satisfies R1 and R2 at every size
 without introducing a new failure mode. D is disqualified outright by the
@@ -76,7 +85,7 @@ and its email dependency is a bigger commitment than the problem needs
 right now. C's weakness — losing track after closing the page — is
 smaller, and B can be layered on top later without undoing any of it.
 
-## Piece 2 — What happens when someone asks twice?
+## Sub-problem 2 — What happens when someone asks twice?
 
 **Serves:** R3
 
@@ -89,6 +98,8 @@ smaller, and B can be layered on top later without undoing any of it.
 - Breaks down when: someone impatiently clicks four times, which is the
   actual reported behavior.
 
+**Rejected:** It is the pile-up described in the problem, not a fix for it.
+
 ### Option B — Refuse the second ask
 
 - How it works: if one is already building, answer with a refusal.
@@ -97,6 +108,9 @@ smaller, and B can be layered on top later without undoing any of it.
   still don't know when their file will be ready.
 - Breaks down when: the person genuinely wants a fresh export because the
   data changed — they're just blocked with no path forward.
+
+**Rejected:** Turns an ordinary double-click into an error the person has to understand,
+and still doesn't tell them when their file will be ready.
 
 ### Option C — Hand back the one already running
 
@@ -116,7 +130,7 @@ enforces the same limit but turns an ordinary double-click into an error
 the person has to understand. C's cost only shows up in a narrow case,
 and the fix for it — wait, then ask again — is obvious.
 
-## Piece 3 — Who may download a finished file, and for how long?
+## Sub-problem 3 — Who may download a finished file, and for how long?
 
 **Serves:** R4, R5
 
@@ -128,6 +142,9 @@ and the fix for it — wait, then ask again — is obvious.
   leaked from a browser history exposes all of it, permanently.
 - Breaks down when: violates R4 outright. Not viable.
 
+**Rejected:** Violates R4 outright — the link alone would expose a full contact list to
+anyone who ever sees it.
+
 ### Option B — Only the owner, forever
 
 - How it works: check on each download that the asker is the account that
@@ -136,6 +153,9 @@ and the fix for it — wait, then ask again — is obvious.
 - Costs: stored files accumulate with no upper bound, which the
   constraints explicitly forbid.
 - Breaks down when: the storage bill is the thing being watched.
+
+**Rejected:** Stored files accumulate with no upper bound, which the constraints
+explicitly forbid.
 
 ### Option C — Only the owner, for a fixed window
 
@@ -154,12 +174,15 @@ and the fix for it — wait, then ask again — is obvious.
   silently burns the only chance. That's a support ticket every time.
 - Breaks down when: downloads are flaky, which for large files they are.
 
+**Rejected:** A retrying browser or a download that fails partway silently burns the
+only chance, and large-file downloads fail partway often.
+
 **Recommended: Option C**
 **Why:** It's the only option that satisfies R4 and R5 together while
 respecting the storage constraint. D adds real fragility for a security
 gain the fixed window already mostly provides.
 
-## How the pieces fit together
+## How the sub-problems fit together
 
 Someone clicks Export. We write down that they asked, and immediately
 answer with a way to refer to that request. If they already have one
@@ -196,12 +219,12 @@ plain explanation.
   first answer is immediate and every later answer is one of three
   known states.
 - **"Ready" is never a partial file** — holds; ready is only set after
-  the file is completely written. This is why Option D of piece 1 was
+  the file is completely written. This is why Option D of sub-problem 1 was
   rejected rather than adjusted.
 
 ## Open trade-offs
 
-- Emailing a link when the export finishes (piece 1, option B) is a real
+- Emailing a link when the export finishes (sub-problem 1, option B) is a real
   improvement for very long exports and can be added later without
   changing anything chosen here. Deliberately not in this round.
 - The 24-hour window is a guess. It's a single value and can be tuned

@@ -16,15 +16,23 @@ times out on exactly the accounts with the most data.
 | | Phase | What to look at |
 |---|---|---|
 | [1-grilling.md](export-timeout/1-grilling.md) | `/grill-me` | The **Out of scope** list and the copy-paste **Requirements** block at the bottom. R1–R6 are set here, and every later phase refers back to those numbers. |
-| [2-solutions.md](export-timeout/2-solutions.md) | `/solve-me` | Four genuinely different options for the main piece, each with a real cost — and one (streaming) rejected because it breaks a rule from phase 1, not because it's unpopular. No framework names anywhere. |
-| [3-build.md](export-timeout/3-build.md) | `/build-me` | Five commits, each naming the piece it comes from, the option it builds, and the R-numbers it serves. This is the plan you approve *before* any code is written. |
+| [2-solutions.md](export-timeout/2-solutions.md) | `/solve-me` | Four genuinely different options for the main sub-problem, each with a real cost — and one (streaming) rejected because it breaks a rule from phase 1, not because it's unpopular. No framework names anywhere. |
+| [3-build.md](export-timeout/3-build.md) | `/build-me` | Five commits, each naming the sub-problem it comes from, the option it builds, and the R-numbers it serves. This is the plan you approve *before* any code is written — except `Touches:` and `Unplanned:`, which get written back afterwards. |
 | [4-verification.md](export-timeout/4-verification.md) | `/verify-me` | Eleven real requests against a running app, a coverage table where every R-number is accounted for, and **one requirement that failed**. |
+| [map.html](export-timeout/map.html) | `/map-me` | The graph built from the four files above — 44 nodes, 8 holes. Self-contained; download it and open it in a browser. |
 
 The most useful part is probably R5 in phase 4. The expiry check was
 written into the commit plan, landed in the wrong place, looked correct
 from the UI, and got caught only because something hit the download
 endpoint directly with an aged record. `/verify-me` reports it and stops
 — it doesn't fix it, and it doesn't write the tests it just listed.
+
+Then read commit 5's `Unplanned:` block in phase 3 — *"put the 24-hour
+window check on the query that lists exports"*. That is the same bug,
+written down by `/build-me` one phase before anyone knew it was a bug.
+Nobody approved it; it was decided while the code was being written. That
+is exactly the class of decision the map is built to surface, and why
+`Unplanned:` exists at all.
 
 ## Adding your own
 

@@ -49,7 +49,7 @@ mention constraints, don't restate the whole doc.
 
 ## Step 1 — Split the problem (divide)
 
-Break the problem into smaller pieces that can mostly be solved on
+Break the problem into smaller sub-problems that can mostly be solved on
 their own. Good ways to split:
 
 - **By stage** — the steps something goes through, in order (e.g.
@@ -63,29 +63,29 @@ their own. Good ways to split:
 
 Rules for splitting:
 
-- Each piece should be small enough to explain in a few sentences.
-- Each piece should be understandable on its own, without re-explaining
+- Each sub-problem should be small enough to explain in a few sentences.
+- Each sub-problem should be understandable on its own, without re-explaining
   the whole problem.
-- Don't split something that's genuinely one decision into two pieces
+- Don't split something that's genuinely one decision into two sub-problems
   just to hit a number — a forced split produces fake options later.
-- Name each piece with a short, plain title (a question it answers),
+- Name each sub-problem with a short, plain title (a question it answers),
   not a technical label.
-- Number the pieces (Piece 1, Piece 2, …) in the order listed —
-  `/build-me`'s commit plan refers to these numbers, so never renumber
-  them afterwards.
+- Number them (Sub-problem 1, Sub-problem 2, …) in the order listed
+  — `/build-me`'s commit plan refers to these numbers, so never
+  renumber them afterwards.
 
-List the pieces and briefly say why you split it that way. If the
-problem is small enough to be one piece, say so and treat it as a
-single piece — don't force a split.
+List the sub-problems and briefly say why you split it that way. If the
+problem is small enough to be one sub-problem, say so and treat it as a
+single sub-problem — don't force a split.
 
 ---
 
-## Step 2 — Solve each piece (conquer)
+## Step 2 — Solve each sub-problem (conquer)
 
-For every piece from Step 1, propose **as many genuinely different
+For every sub-problem from Step 1, propose **as many genuinely different
 ways to solve it as actually exist**. Different means the underlying
-approach differs, not just small details. A piece with real design
-freedom gets three or more options. A piece with a genuinely forced
+approach differs, not just small details. A sub-problem with real design
+freedom gets three or more options. A sub-problem with a genuinely forced
 answer gets one option plus two lines on why no real alternative
 exists. Never invent an option you would argue against — a fake option
 costs the developer reading time at the approval gate and buys
@@ -109,11 +109,22 @@ Then pick one and say so clearly:
 The recommendation must be justified using facts from the problem
 write-up (the rules, limits, and edge cases), not personal taste.
 
+Finally, go back to **every option you did not pick** and give it one
+line saying why it lost:
+
+> **Rejected:** [the single reason this one is not the answer]
+
+This is not a summary of the Costs and Breaks-down-when bullets — it's
+the one sentence someone reading this in six months needs. The reason
+an option lost is the part of the design that decays fastest and the
+part people most often relitigate. One line, stated once, on the option
+itself. Never leave a losing option without one.
+
 ---
 
-## Step 3 — Put the pieces back together (combine)
+## Step 3 — Put it back together (combine)
 
-Once every piece has a recommended solution, check that they actually
+Once every sub-problem has a recommended solution, check that they actually
 fit together:
 
 - Walk through the normal, everyday case end to end using the chosen
@@ -122,7 +133,7 @@ fit together:
   combination still produce the right outcome?
 - Check every "must always stay true" rule from the problem write-up
   against the combined solution. If any one breaks, go back and pick a
-  different option for the piece that caused it — don't patch around it
+  different option for the sub-problem that caused it — don't patch around it
   with a special case unless the problem write-up allows for one.
 
 If two chosen options conflict with each other (e.g. one assumes
@@ -152,13 +163,13 @@ Write one markdown file with the full breakdown.
 plain-language restatement if none exists>
 
 ## How this was split
-<short list of the pieces, and one line each on why split this way —
+<short list of the sub-problems, and one line each on why split this way —
 or "not split — small enough to solve directly" if Step 1 kept it whole>
 
-## Piece 1 — <title, as a plain question>
-**Serves:** R1, R3 <the requirement numbers from the /grill-me file this
-piece exists to satisfy — if a piece serves none of them, it shouldn't
-be here>
+## Sub-problem 1 — <title, as a plain question>
+**Serves:** R1, R3 <the requirement numbers from the /grill-me file
+this sub-problem exists to satisfy — if it serves none of them, it
+shouldn't be here>
 
 ### Option A — <short plain name>
 - How it works: ...
@@ -166,8 +177,12 @@ be here>
 - Costs: ...
 - Breaks down when: ...
 
+**Rejected:** <one line — why this one is not the answer>
+
 ### Option B — <short plain name>
 ...
+
+**Rejected:** <one line — why this one is not the answer>
 
 ### Option C — <short plain name>
 ...
@@ -175,10 +190,10 @@ be here>
 **Recommended: Option <X>**
 **Why:** ...
 
-## Piece 2 — <title, as a plain question>
+## Sub-problem 2 — <title, as a plain question>
 <same shape as above>
 
-## How the pieces fit together
+## How the sub-problems fit together
 <plain walkthrough of the normal case using the recommended options>
 
 ## Edge cases, checked against the combined solution
@@ -197,14 +212,39 @@ marked as holding or, if not, how the solution was adjusted>
 
 ---
 
+## Refresh the map
+
+You just wrote something the map is built from, so bring it up to date
+before moving on:
+
+```bash
+node ~/.claude/skills/map-me/map-me.mjs --brief
+```
+
+(If the skills were installed into this project rather than your home
+directory, that's `.claude/skills/map-me/map-me.mjs`. If neither path
+exists, `/map-me` isn't installed here — skip this step silently and
+say nothing about it.)
+
+`--brief` prints nothing at all unless something changed. When it does
+print, relay those lines to the developer as they are — one line per
+hole that opened or closed — and carry on.
+
+**It is never a gate.** Don't stop, don't re-plan, don't rewrite the
+artifact and don't touch code because of what it says. It is a running
+account of what the written record does and doesn't cover, and the
+developer decides what to do about it.
+
+---
+
 ## What this skill does NOT do
 
 - It does not write code.
 - It does not pick a framework, library, or database technology.
-- It does not split the work into commits. The pieces here are units
+- It does not split the work into commits. The sub-problems here are units
   of *thinking*, not units of *committing*. How the work is cut into
   commits is decided in `/build-me`, with the developer, against the
-  real codebase. Never label a piece "commit 1", never suggest a
+  real codebase. Never label a sub-problem "commit 1", never suggest a
   commit order, never suggest commit messages.
 - It does not re-interrogate the problem — if the problem write-up is
   thin, vague, or missing constraints, say so and suggest running
@@ -213,8 +253,8 @@ marked as holding or, if not, how the solution was adjusted>
   idea, no strawman alternatives. Real distinct approaches only, and a
   genuinely forced answer is presented as exactly that.
 - It does not include writing unit tests or feature tests as part of
-  any option, piece, or recommendation. Never propose "add tests" as a
-  solution piece and never treat test coverage as a trade-off between
+  any option, sub-problem, or recommendation. Never propose "add tests" as a
+  solution sub-problem and never treat test coverage as a trade-off between
   options. Verifying the build is `/verify-me`'s job, done later
   against the real running app — not something to design here.
 
@@ -222,19 +262,22 @@ marked as holding or, if not, how the solution was adjusted>
 
 ## Done means
 
-- The problem has been split into clear, plain-language pieces (or
+- The problem has been split into clear, plain-language sub-problems (or
   kept whole, if genuinely small).
-- Every piece shows its genuine option space — one, two, or more real,
-  different options — with padding forbidden, and any one-option piece
+- Every sub-problem shows its genuine option space — one, two, or more real,
+  different options — with padding forbidden, and any one-option sub-problem
   explains why no real alternative exists.
 - Every option is explained in plain, framework-free language with a
   real cost and a real benefit.
-- Every piece has one clearly recommended option, justified against
+- Every sub-problem has one clearly recommended option, justified against
   the problem's actual rules and edge cases.
+- Every option that was not picked carries a one-line **Rejected:**
+  reason. The recommended option carries none — its reason is the
+  **Why:** line.
 - The recommended options have been checked together against the
   normal case, the edge cases, and the "must always stay true" rules.
-- Any conflict between pieces has been resolved and explained.
+- Any conflict between sub-problems has been resolved and explained.
 - Everything has been saved to one markdown file at a path the
-  developer knows.
+  developer knows, and the map was refreshed afterwards.
 
 Then hand off — implementation can begin from this file.
