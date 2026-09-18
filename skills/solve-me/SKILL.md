@@ -8,7 +8,9 @@ description: >
   three or more where there's real design freedom, one honestly-explained
   forced answer where there isn't — plus one recommendation, in plain
   language with no framework or tech-stack names.
-  Saves the result to a markdown file. Use after /grill-me, before writing
+  Saves the result to a markdown file, plus a second file listing
+  everything that could break the feature — inputs, data and scenarios —
+  so /build-me handles every one. Use after /grill-me, before writing
   any code.
 ---
 
@@ -44,6 +46,40 @@ Read the problem write-up fully before doing anything else. Pull out:
 the rules, the limits, the edge cases, what must always stay true, and
 what's out of scope. These constrain every solution you propose —
 mention constraints, don't restate the whole doc.
+
+### Revising after a critique
+
+If you're also given a critique file (`docs/critique/<slug>.md`, from
+`/critique-me`), you're in a dialogue with the critic, not starting
+over. This can happen several rounds in a row. Each round, read the
+latest round of the critique, then:
+
+- Answer every open **Must fix** finding, one of two ways:
+  - **Fixed** — change the solution.
+  - **Disagree** — say in one or two lines why the finding is wrong,
+    with evidence (the grilling file, or why the standard approach
+    doesn't fit here). Don't give in just to end the dialogue: a
+    wrong fix is worse than an honest disagreement the developer
+    settles.
+  Never ignore one.
+- Take a **Worth considering** finding only if it's clearly better;
+  otherwise leave it for the developer.
+- Keep the sub-problem numbers. Change only what a finding touches. A
+  genuinely new sub-problem goes at the end with the next number.
+- Re-run Step 3 (put it back together) on the result, and update
+  `docs/breakers/<slug>.md` to match — add, fix or re-point cases.
+- Add this round to a section at the end, before Open trade-offs:
+
+```markdown
+## Changes after critique
+
+### Round 1
+- <finding, in a few words> → Fixed: <what changed>
+- <finding, in a few words> → Disagree: <why, with evidence>
+
+### Round 2
+- …
+```
 
 ---
 
@@ -212,28 +248,66 @@ marked as holding or, if not, how the solution was adjusted>
 
 ---
 
-## Refresh the map
+## Step 5 — List what can break it
 
-You just wrote something the map is built from, so bring it up to date
-before moving on:
+Write a second file: `docs/breakers/<same-slug>.md`. It's the list of
+everything that could make this feature fail, so `/build-me` can make
+sure every one is handled and `/verify-me` can try every one against
+the real app. Think like someone trying to break it on purpose, and
+like a tired user on a bad day.
 
-```bash
-node ~/.claude/skills/map-me/map-me.mjs --brief
+Go through three groups, and for each, think about the chosen options
+specifically — what could break **this** design, not features in
+general:
+
+- **Input** — what a person or another system could send: empty,
+  missing, too long, too big, wrong type, wrong format, special
+  characters, negative or zero, exactly at a limit and one past it,
+  duplicates, something that looks valid but refers to a thing that
+  doesn't exist or belongs to someone else.
+- **Data** — what's already stored or will be: none at all, one, a
+  huge amount, old records created before this feature, missing or
+  half-filled values, duplicates, records in an unexpected state,
+  records that were deleted or changed mid-way.
+- **Scenarios** — how things happen in time: the same action twice,
+  two people at once, steps arriving out of order, a failure halfway
+  through, a retry after a failure, a timeout, something another
+  system does or doesn't do, someone without permission, someone whose
+  permission changes mid-way, the state changing while someone is
+  looking at an old screen.
+
+Only list what really applies here — every item must be a concrete
+case for this feature, not a generic checklist entry. Number them
+`B1, B2, …` so later phases can refer to them.
+
+```markdown
+# What can break — <topic>
+
+Solution: docs/solutions/<slug>.md
+Problem:  docs/grilling/<slug>.md
+
+## Input
+- **B1 — <short name>:** <the concrete case>
+  - **Would break:** <R-number or rule it threatens>
+  - **Handled by:** <sub-problem N, option X — how it holds up>
+  - **Risk:** 🔴 high / 🟡 medium / 🟢 low
+
+## Data
+- **B4 — …**
+
+## Scenarios
+- **B7 — …**
 ```
 
-(If the skills were installed into this project rather than your home
-directory, that's `.claude/skills/map-me/map-me.mjs`. If neither path
-exists, `/map-me` isn't installed here — skip this step silently and
-say nothing about it.)
-
-`--brief` prints nothing at all unless something changed. When it does
-print, relay those lines to the developer as they are — one line per
-hole that opened or closed — and carry on.
-
-**It is never a gate.** Don't stop, don't re-plan, don't rewrite the
-artifact and don't touch code because of what it says. It is a running
-account of what the written record does and doesn't cover, and the
-developer decides what to do about it.
+- **Handled by** must point at the design. If nothing in the solution
+  handles a case, don't leave it blank — go back and fix the solution
+  (or add it to Open trade-offs if it needs the developer), then fill
+  it in.
+- 🔴 = it breaks a "must always stay true" rule or loses/leaks data.
+  🟡 = it breaks a requirement for some people. 🟢 = an unpleasant but
+  harmless outcome.
+- Plain language, no framework names — same rules as the solution.
+- Tell the developer the file path once it's written.
 
 ---
 
@@ -278,6 +352,9 @@ developer decides what to do about it.
   normal case, the edge cases, and the "must always stay true" rules.
 - Any conflict between sub-problems has been resolved and explained.
 - Everything has been saved to one markdown file at a path the
-  developer knows, and the map was refreshed afterwards.
+  developer knows.
+- `docs/breakers/<slug>.md` lists every concrete input, data and
+  scenario case that could break this design, numbered B1, B2, …, and
+  every one points at the part of the solution that handles it.
 
 Then hand off — implementation can begin from this file.

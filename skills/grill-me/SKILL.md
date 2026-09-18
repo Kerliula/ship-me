@@ -11,7 +11,11 @@ description: >
   developer confirm or correct them. Saves the final understanding to a
   markdown file that ends with a plain-language, copy-paste-ready
   requirements block: numbered requirements, what we touch, what we
-  deliberately don't, and the checks that prove it works.
+  deliberately don't, and the checks that prove it works. Finds the
+  load-bearing assumptions — the ones that would reshape the
+  architecture if they turned out wrong — rates how much each would
+  change, and won't pass the gate while a high-impact one is still a
+  guess, drafting the exact question to send to whoever can confirm it.
 ---
 
 # Grilling — Comprehension Gate
@@ -68,7 +72,9 @@ call costs zero extra rounds.
   present them in ONE round for confirm/correct, and skip the question
   tree and the stress test. Still write the full file, including the
   requirements block with R-numbers — small tasks deserve the artifact,
-  just not the ceremony.
+  just not the ceremony. Still name any load-bearing assumption in
+  that round — a small change can rest on a 🔴 too, and if it does,
+  step up to MEDIUM.
 - **MEDIUM** — a real feature, but contained. Run normal rounds aiming
   for 2–3 total. Merge the close into one message: a drafted summary of
   the 10 closing answers built from the running tally, the two gap
@@ -114,6 +120,77 @@ buckets:
 If someone states a guess as if it were a fact, say so plainly:
 
 > "That's a guess right now, not something we've confirmed."
+
+---
+
+## Find the load-bearing assumptions
+
+Not every guess is equal. "The list is sorted by name" is cheap to get
+wrong — one line changes later. "One order belongs to one customer"
+is not: if it's actually many, the data, the screens, and the access
+rules all change. Your most important job is to find the second kind
+before any design starts, and make sure none of them is still a guess.
+
+For every decision and every guess that comes up, ask yourself:
+**"If this turned out to be the other way, how much of what we'd build
+would change?"** Name both sides concretely — *X* (what we're
+assuming) and *Y* (the realistic alternative) — and rate it:
+
+- 🔴 **High — reshapes the architecture** (roughly 30%+ of the
+  design). Changes what gets stored and how things relate, what states
+  exist, who owns what, whether something happens right away or later,
+  or who is allowed to do what. Getting it wrong later means rework,
+  not a fix.
+- 🟡 **Medium — changes one part** (roughly 10–30%). One area gets
+  redesigned; the rest stands.
+- 🟢 **Low — a local change** (under 10%). A value, a message, an
+  order. Easy to change later.
+
+The percentage is an estimate — always say **what** would change, not
+just the number: *"~40% — the data would need a new link between
+orders and customers, every order screen would need a customer picker,
+and access rules change from per-customer to per-order."*
+
+**Where they hide.** Load-bearing assumptions usually sit in:
+one-vs-many (one owner or several? one address or many?), who owns or
+may see something, whether it must happen instantly or can happen
+later, whether something can ever be undone or changed after the
+fact, what happens to existing data, scale (hundreds or millions?),
+and whether another system or team depends on it. Check each of these
+explicitly, even if the developer never mentioned it — the most
+dangerous assumptions are the ones nobody said out loud.
+
+**Who can confirm it.** A 🔴 is only settled when the person who
+actually owns that fact confirms it — and that's often not the
+developer. A business rule belongs to the project manager or client;
+a fact about another system belongs to its team. If the developer
+answers a 🔴 from memory or instinct, it's still a guess: say so, and
+write the question for them to send, phrased for that person — no
+technical words, both options, and what depends on it:
+
+> 📨 **For the project manager:** "Can one order ever belong to more
+> than one customer — for example a shared company account? We're
+> building it for exactly one. If that's wrong, about 40% of this
+> feature would need redoing later, so we'd like to be sure now."
+
+**Ask the 🔴 ones first.** They sit at the top of the question tree —
+their answers change which other questions even matter. Don't spend
+rounds on 🟢 details while a 🔴 is open.
+
+**The gate.** The session cannot pass while any 🔴 is still a guess.
+Each one ends in one of three states:
+
+- **Confirmed** — by whom (the developer, if it's genuinely theirs to
+  decide, or the named person who owns it).
+- **Waiting on <person>** — the question is sent. Pause here; save the
+  file as a draft marked `Status: waiting for confirmation`, and pick
+  up when the answer comes back.
+- **Accepted risk** — the developer explicitly chooses to go ahead
+  without confirming, knowing what it would cost. Record it in their
+  words. Never choose this on their behalf.
+
+🟡 items should be confirmed too, but the developer may settle them
+alone. 🟢 items just get decided.
 
 ---
 
@@ -274,6 +351,7 @@ Track, in plain terms:
     WHAT WE KNOW FOR SURE
     WHAT'S BEEN DECIDED
     WHAT'S STILL A GUESS
+    LOAD-BEARING ASSUMPTIONS (🔴/🟡, with status)
     QUESTIONS STILL OPEN
     THINGS THAT CONTRADICT EACH OTHER
     EDGE CASES NOT YET CHECKED
@@ -310,9 +388,10 @@ The developer still has to decide. Silence is not a yes.
 
 ## How to format each round
 
-❓ **Q1 — [short title]:** [plain question]
+❓ **Q1 — [short title]:** 🔴 [plain question]
 
-[one line on why it matters, only if it's not obvious]
+[one line on why it matters, only if it's not obvious — for a 🔴,
+always: "If Y instead, ~N% changes: <what>"]
 
 ➡️ My guess: [simple recommended answer]
 
@@ -320,8 +399,8 @@ The developer still has to decide. Silence is not a yes.
 
 ➡️ My guess: [simple recommended answer]
 
-Then stop and wait. Don't ask a question whose earlier question isn't
-answered yet.
+Tag every question 🔴, 🟡 or 🟢. Then stop and wait. Don't ask a
+question whose earlier question isn't answered yet.
 
 ---
 
@@ -425,6 +504,10 @@ land on goes into the file verbatim.
 - Their answers to the stress-test scenarios match their own rules
   (LARGE; merged into the single closing message for MEDIUM).
 - Nothing important is still a guess.
+- Every load-bearing assumption was named with both sides (X vs Y),
+  rated 🔴/🟡/🟢 with what would change, and every 🔴 is Confirmed by
+  the person who owns it or an Accepted risk in the developer's words —
+  none is Waiting.
 
 Only then say:
 
@@ -482,6 +565,12 @@ person, or for a future session).
 ## How we'll know it worked
 <plain description>
 
+## Load-bearing assumptions
+| | We assume | If instead | What would change | Status |
+|---|---|---|---|---|
+| 🔴 | <X> | <Y> | ~<N>% — <what> | Confirmed by <who> / Accepted risk: "<their words>" |
+| 🟡 | … | … | … | … |
+
 ## Open questions (if any remain by choice)
 <list, or "none">
 
@@ -512,35 +601,9 @@ person, or for a future session).
   issue, PR description, or commit body.
 - Number the requirements `R1, R2, …`. Later phases refer back to
   these numbers, so don't renumber them afterwards.
-- Tell the developer the file path once it's written, then refresh the
-   map (see below).
+- Tell the developer the file path once it's written.
 - Don't put any code, framework names, or implementation details in
   this file — it's the problem, not the solution.
-
----
-
-## Refresh the map
-
-You just wrote something the map is built from, so bring it up to date
-before moving on:
-
-```bash
-node ~/.claude/skills/map-me/map-me.mjs --brief
-```
-
-(If the skills were installed into this project rather than your home
-directory, that's `.claude/skills/map-me/map-me.mjs`. If neither path
-exists, `/map-me` isn't installed here — skip this step silently and
-say nothing about it.)
-
-`--brief` prints nothing at all unless something changed. When it does
-print, relay those lines to the developer as they are — one line per
-hole that opened or closed — and carry on.
-
-**It is never a gate.** Don't stop, don't re-plan, don't rewrite the
-artifact and don't touch code because of what it says. It is a running
-account of what the written record does and doesn't cover, and the
-developer decides what to do about it.
 
 ---
 

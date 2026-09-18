@@ -107,13 +107,10 @@ Problem:  `examples/export-timeout/1-grilling.md`
 > R5 in [4-verification.md](4-verification.md). It was written down one
 > phase before anyone knew it was a bug.
 
-> After each commit, `/build-me` stops. New logic carries `// WHY:`
-> comments explaining the choice against the rejected options — meant to
-> be deleted once read. For example, from commit 4:
+> After each commit, `/build-me` stops. New logic carries one-line
+> `// WHY:` comments giving the reason in plain words — meant to be
+> deleted once read. For example, from commit 4:
 >
 > ```php
-> // WHY: hands back the export already running instead of refusing the
-> // second click, so impatient double-clicking looks the same as one
-> // click. Refusing would satisfy R3 too, but turns ordinary behavior
-> // into an error the person has to understand.
+> // WHY: a second click returns the running export, so double-clicks aren't errors.
 > ```

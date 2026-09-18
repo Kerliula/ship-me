@@ -37,7 +37,9 @@ You need three things:
    `docs/grilling/<topic>.md`).
 2. The solution write-up (from `/solve-me`, e.g.
    `docs/solutions/<topic>.md`).
-3. What was actually built (from `/build-me` — recent commits, changed
+3. What can break it (from `/solve-me`, e.g.
+   `docs/breakers/<topic>.md`), if it exists.
+4. What was actually built (from `/build-me` — recent commits, changed
    files, or just ask the developer what to verify).
 
 If any of these are missing, ask for them or the file paths. Don't
@@ -79,6 +81,8 @@ From the two write-ups, pull out a short checklist:
   requirements block — these are the spine of the whole verification.
 - The golden path (the normal, everyday case).
 - Every edge case either doc mentions.
+- Every case in the breakers file (B1, B2, …) — each one becomes at
+  least one real request, and the report says which B-number it tried.
 - Every "must always stay true" rule.
 - What's explicitly out of scope (don't test what was deliberately not
   built).
@@ -238,38 +242,7 @@ coverage table — verified with the requests that prove it, failed with
 a pointer to Problems found, or skipped with a one-line reason. No
 requirement just disappears.
 
-Keep the coverage table's shape exactly as above: three columns, the
-first cell starting with the bare R-number, the third holding ✅, ❌ or
-— and nothing else before the dash. `/map-me` reads this table to mark
-which requirements are actually proven, so a reformatted table silently
-turns a verified requirement into an unproven one.
-
 Tell the developer the file path once it's written.
-
----
-
-## Refresh the map
-
-You just wrote something the map is built from, so bring it up to date
-before moving on:
-
-```bash
-node ~/.claude/skills/map-me/map-me.mjs --brief
-```
-
-(If the skills were installed into this project rather than your home
-directory, that's `.claude/skills/map-me/map-me.mjs`. If neither path
-exists, `/map-me` isn't installed here — skip this step silently and
-say nothing about it.)
-
-`--brief` prints nothing at all unless something changed. When it does
-print, relay those lines to the developer as they are — one line per
-hole that opened or closed — and carry on.
-
-**It is never a gate.** Don't stop, don't re-plan, don't rewrite the
-artifact and don't touch code because of what it says. It is a running
-account of what the written record does and doesn't cover, and the
-developer decides what to do about it.
 
 ---
 
@@ -280,9 +253,7 @@ developer decides what to do about it.
 - **Ask before you start** (scope, environment, database, login) and
   wait for an answer. Silent, fully autonomous verification is a bug,
   not a feature.
-- **This skill ends when the file is written** (bar the map refresh,
-  which is a script, touches nothing but `docs/map/`, and starts no
-  other skill). Never invoke `/test-me`, `/build-me`, or any other
+- **This skill ends when the file is written.** Never invoke `/test-me`, `/build-me`, or any other
   skill afterwards, and never start writing the tests you just listed — even if the missing tests
   are obvious and it feels like the natural next step. Report the file
   path, say what you found, and stop. Running the next phase is the
@@ -313,7 +284,7 @@ developer decides what to do about it.
 - A plain-language list of missing unit and feature tests has been
   produced.
 - Everything has been saved to one clean markdown file at a path the
-  developer knows, and the map was refreshed afterwards.
+  developer knows.
 - The developer confirmed scope and environment before any request was
   sent, and nothing else was run afterwards — no tests written, no
   other skill started.

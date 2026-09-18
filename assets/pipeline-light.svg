@@ -1,77 +1,86 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1288 588" width="1288" height="588" font-family="ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" role="img" aria-label="The ship-me pipeline: grill-me, solve-me, build-me, verify-me, test-me, with developer approval gates between them, and map-me drawing every run as one graph.">
-<rect width="1288" height="588" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1288 612" width="1288" height="612" font-family="ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" role="img" aria-label="The ship-me pipeline: grill-me, solve-me in dialogue with critique-me, build-me, verify-me, test-me, with developer approval gates between them, ending in one feature summary.">
+<rect width="1288" height="612" fill="#ffffff"/>
 <text x="44" y="46" font-size="21" font-weight="600" fill="#1f2328">Five gates between a vague idea and tested code</text>
 <text x="44" y="70" font-size="14" fill="#656d76">Each phase hands a written artifact to the next. Nothing advances on a phase that isn't finished.</text>
-<rect x="44" y="140" width="208" height="236" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
+<rect x="44" y="140" width="208" height="322" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
 <text x="64" y="174" font-size="12" font-weight="600" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#656d76" letter-spacing="1">01</text>
 <text x="64" y="204" font-size="17" font-weight="600" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#0969da">/grill-me</text>
 <text x="64" y="236" font-size="13.5" fill="#1f2328">Can you explain the</text>
-<text x="64" y="257" font-size="13.5" fill="#1f2328">problem in your own</text>
-<text x="64" y="278" font-size="13.5" fill="#1f2328">words?</text>
-<line x1="64" y1="314" x2="232" y2="314" stroke="#d0d7de" stroke-width="1"/>
-<text x="64" y="333" font-size="10.5" fill="#656d76" letter-spacing="0.6">WRITES</text>
-<rect x="64" y="341" width="168" height="23" rx="5" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
-<text x="74" y="357" font-size="11.5" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#1f2328">docs/grilling/</text>
-<line x1="260" y1="258.0" x2="279" y2="258.0" stroke="#afb8c1" stroke-width="2" stroke-linecap="round"/>
-<path d="M 279 258.0 l -7 -4.5 v 9 z" fill="#afb8c1"/>
-<rect x="292" y="140" width="208" height="236" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
+<text x="64" y="257" font-size="13.5" fill="#1f2328">problem — and which</text>
+<text x="64" y="278" font-size="13.5" fill="#1f2328">guesses could reshape</text>
+<text x="64" y="299" font-size="13.5" fill="#1f2328">the whole design?</text>
+<line x1="64" y1="340" x2="232" y2="340" stroke="#d0d7de" stroke-width="1"/>
+<text x="64" y="359" font-size="10.5" fill="#656d76" letter-spacing="0.6">WRITES</text>
+<rect x="64" y="367" width="168" height="23" rx="5" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
+<text x="74" y="383" font-size="11.5" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#1f2328">docs/grilling/</text>
+<line x1="260" y1="295" x2="279" y2="295" stroke="#afb8c1" stroke-width="2" stroke-linecap="round"/>
+<path d="M 279 295 l -7 -4.5 v 9 z" fill="#afb8c1"/>
+<rect x="292" y="140" width="208" height="322" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
 <text x="312" y="174" font-size="12" font-weight="600" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#656d76" letter-spacing="1">02</text>
 <text x="312" y="204" font-size="17" font-weight="600" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#0969da">/solve-me</text>
-<text x="312" y="236" font-size="13.5" fill="#1f2328">What are all the real</text>
-<text x="312" y="257" font-size="13.5" fill="#1f2328">options, in plain</text>
-<text x="312" y="278" font-size="13.5" fill="#1f2328">language?</text>
-<line x1="312" y1="314" x2="480" y2="314" stroke="#d0d7de" stroke-width="1"/>
-<text x="312" y="333" font-size="10.5" fill="#656d76" letter-spacing="0.6">WRITES</text>
-<rect x="312" y="341" width="168" height="23" rx="5" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
-<text x="322" y="357" font-size="11.5" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#1f2328">docs/solutions/</text>
-<line x1="508" y1="258.0" x2="527" y2="258.0" stroke="#afb8c1" stroke-width="2" stroke-linecap="round"/>
-<path d="M 527 258.0 l -7 -4.5 v 9 z" fill="#afb8c1"/>
-<rect x="540" y="140" width="208" height="236" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
+<rect x="312" y="214" width="150" height="22" rx="11" fill="#ddf4ff"/>
+<text x="387" y="229" font-size="12.5" font-weight="600" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#0969da" text-anchor="middle">⇄ /critique-me</text>
+<text x="312" y="258" font-size="13.5" fill="#1f2328">Real options, argued</text>
+<text x="312" y="279" font-size="13.5" fill="#1f2328">with a critic until it</text>
+<text x="312" y="300" font-size="13.5" fill="#1f2328">can't break them. Lists</text>
+<text x="312" y="321" font-size="13.5" fill="#1f2328">what could break it.</text>
+<line x1="312" y1="340" x2="480" y2="340" stroke="#d0d7de" stroke-width="1"/>
+<text x="312" y="359" font-size="10.5" fill="#656d76" letter-spacing="0.6">WRITES</text>
+<rect x="312" y="367" width="168" height="23" rx="5" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
+<text x="322" y="383" font-size="11.5" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#1f2328">docs/solutions/</text>
+<rect x="312" y="395" width="168" height="23" rx="5" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
+<text x="322" y="411" font-size="11.5" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#1f2328">docs/breakers/</text>
+<rect x="312" y="423" width="168" height="23" rx="5" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
+<text x="322" y="439" font-size="11.5" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#1f2328">docs/critique/</text>
+<line x1="508" y1="295" x2="527" y2="295" stroke="#afb8c1" stroke-width="2" stroke-linecap="round"/>
+<path d="M 527 295 l -7 -4.5 v 9 z" fill="#afb8c1"/>
+<rect x="540" y="140" width="208" height="322" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
 <text x="560" y="174" font-size="12" font-weight="600" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#656d76" letter-spacing="1">03</text>
 <text x="560" y="204" font-size="17" font-weight="600" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#0969da">/build-me</text>
 <text x="560" y="236" font-size="13.5" fill="#1f2328">One commit at a time,</text>
 <text x="560" y="257" font-size="13.5" fill="#1f2328">each tied to a</text>
-<text x="560" y="278" font-size="13.5" fill="#1f2328">requirement.</text>
-<line x1="560" y1="314" x2="728" y2="314" stroke="#d0d7de" stroke-width="1"/>
-<text x="560" y="333" font-size="10.5" fill="#656d76" letter-spacing="0.6">WRITES</text>
-<rect x="560" y="341" width="168" height="23" rx="5" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
-<text x="570" y="357" font-size="11.5" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#1f2328">docs/build/</text>
-<line x1="756" y1="258.0" x2="775" y2="258.0" stroke="#afb8c1" stroke-width="2" stroke-linecap="round"/>
-<path d="M 775 258.0 l -7 -4.5 v 9 z" fill="#afb8c1"/>
-<rect x="788" y="140" width="208" height="236" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
+<text x="560" y="278" font-size="13.5" fill="#1f2328">requirement, with the</text>
+<text x="560" y="299" font-size="13.5" fill="#1f2328">whole map after each.</text>
+<line x1="560" y1="340" x2="728" y2="340" stroke="#d0d7de" stroke-width="1"/>
+<text x="560" y="359" font-size="10.5" fill="#656d76" letter-spacing="0.6">WRITES</text>
+<rect x="560" y="367" width="168" height="23" rx="5" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
+<text x="570" y="383" font-size="11.5" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#1f2328">docs/build/</text>
+<line x1="756" y1="295" x2="775" y2="295" stroke="#afb8c1" stroke-width="2" stroke-linecap="round"/>
+<path d="M 775 295 l -7 -4.5 v 9 z" fill="#afb8c1"/>
+<rect x="788" y="140" width="208" height="322" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
 <text x="808" y="174" font-size="12" font-weight="600" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#656d76" letter-spacing="1">04</text>
 <text x="808" y="204" font-size="17" font-weight="600" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#0969da">/verify-me</text>
 <text x="808" y="236" font-size="13.5" fill="#1f2328">Does the running app</text>
-<text x="808" y="257" font-size="13.5" fill="#1f2328">actually do it?</text>
-<text x="808" y="278" font-size="13.5" fill="#1f2328">Real curl, real data.</text>
-<line x1="808" y1="314" x2="976" y2="314" stroke="#d0d7de" stroke-width="1"/>
-<text x="808" y="333" font-size="10.5" fill="#656d76" letter-spacing="0.6">WRITES</text>
-<rect x="808" y="341" width="168" height="23" rx="5" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
-<text x="818" y="357" font-size="11.5" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#1f2328">docs/verification/</text>
-<line x1="1004" y1="258.0" x2="1023" y2="258.0" stroke="#afb8c1" stroke-width="2" stroke-linecap="round"/>
-<path d="M 1023 258.0 l -7 -4.5 v 9 z" fill="#afb8c1"/>
-<rect x="1036" y="140" width="208" height="236" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
+<text x="808" y="257" font-size="13.5" fill="#1f2328">actually do it? Every</text>
+<text x="808" y="278" font-size="13.5" fill="#1f2328">breaker tried with</text>
+<text x="808" y="299" font-size="13.5" fill="#1f2328">real curl, real data.</text>
+<line x1="808" y1="340" x2="976" y2="340" stroke="#d0d7de" stroke-width="1"/>
+<text x="808" y="359" font-size="10.5" fill="#656d76" letter-spacing="0.6">WRITES</text>
+<rect x="808" y="367" width="168" height="23" rx="5" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
+<text x="818" y="383" font-size="11.5" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#1f2328">docs/verification/</text>
+<line x1="1004" y1="295" x2="1023" y2="295" stroke="#afb8c1" stroke-width="2" stroke-linecap="round"/>
+<path d="M 1023 295 l -7 -4.5 v 9 z" fill="#afb8c1"/>
+<rect x="1036" y="140" width="208" height="322" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"/>
 <text x="1056" y="174" font-size="12" font-weight="600" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#656d76" letter-spacing="1">05</text>
 <text x="1056" y="204" font-size="17" font-weight="600" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#0969da">/test-me</text>
 <text x="1056" y="236" font-size="13.5" fill="#1f2328">Only the tests that</text>
 <text x="1056" y="257" font-size="13.5" fill="#1f2328">would catch a real</text>
 <text x="1056" y="278" font-size="13.5" fill="#1f2328">bug.</text>
-<line x1="1056" y1="314" x2="1224" y2="314" stroke="#d0d7de" stroke-width="1"/>
-<text x="1056" y="333" font-size="10.5" fill="#656d76" letter-spacing="0.6">WRITES</text>
-<rect x="1056" y="341" width="168" height="23" rx="5" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
-<text x="1066" y="357" font-size="11.5" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#1f2328">tests/</text>
-<path d="M 520.0 126 l 11 11 l -11 11 l -11 -11 z" fill="#fff8c5" stroke="#d4a72c" stroke-width="1.5"/>
-<text x="520.0" y="82" font-size="11.5" font-weight="600" fill="#9a6700" text-anchor="middle">you approve</text>
-<text x="520.0" y="96" font-size="11.5" font-weight="600" fill="#9a6700" text-anchor="middle">the options</text>
-<path d="M 1016.0 126 l 11 11 l -11 11 l -11 -11 z" fill="#fff8c5" stroke="#d4a72c" stroke-width="1.5"/>
-<text x="1016.0" y="82" font-size="11.5" font-weight="600" fill="#9a6700" text-anchor="middle">you approve</text>
-<text x="1016.0" y="96" font-size="11.5" font-weight="600" fill="#9a6700" text-anchor="middle">running tests</text>
-<rect x="44" y="406" width="1200" height="56" rx="10" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" stroke-dasharray="5 4"/>
-<text x="64" y="440" font-size="15" font-weight="600" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#0969da">/ship-me</text>
-<text x="168" y="440" font-size="13.5" fill="#1f2328">runs all five in order — and still stops at every gate. Each skill also works on its own.</text>
-<rect x="44" y="474" width="1200" height="56" rx="10" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" stroke-dasharray="5 4"/>
-<text x="64" y="508" font-size="15" font-weight="600" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#0969da">/map-me</text>
-<text x="168" y="508" font-size="13.5" fill="#1f2328">draws every run as one graph and reports the holes — what nothing built, what nothing proved, what skipped a gate.</text>
-<path d="M 51 552 l 7 7 l -7 7 l -7 -7 z" fill="#fff8c5" stroke="#d4a72c" stroke-width="1.5"/>
-<text x="70" y="557" font-size="12" fill="#656d76">approval gate — the pipeline waits for you (a third gate sits inside /build-me: the commit plan)</text>
+<line x1="1056" y1="340" x2="1224" y2="340" stroke="#d0d7de" stroke-width="1"/>
+<text x="1056" y="359" font-size="10.5" fill="#656d76" letter-spacing="0.6">WRITES</text>
+<rect x="1056" y="367" width="168" height="23" rx="5" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
+<text x="1066" y="383" font-size="11.5" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#1f2328">tests/</text>
+<path d="M 520 126 l 11 11 l -11 11 l -11 -11 z" fill="#fff8c5" stroke="#d4a72c" stroke-width="1.5"/>
+<text x="520" y="96" font-size="11.5" font-weight="600" fill="#9a6700" text-anchor="middle">you approve</text>
+<text x="520" y="110" font-size="11.5" font-weight="600" fill="#9a6700" text-anchor="middle">the options</text>
+<path d="M 1016 126 l 11 11 l -11 11 l -11 -11 z" fill="#fff8c5" stroke="#d4a72c" stroke-width="1.5"/>
+<text x="1016" y="96" font-size="11.5" font-weight="600" fill="#9a6700" text-anchor="middle">you approve</text>
+<text x="1016" y="110" font-size="11.5" font-weight="600" fill="#9a6700" text-anchor="middle">running tests</text>
+<rect x="44" y="490" width="1200" height="64" rx="10" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="64" y="518" font-size="15" font-weight="600" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#0969da">/ship-me</text>
+<text x="168" y="518" font-size="13.5" fill="#1f2328">runs all five in order and still stops at every gate. Each skill also works on its own.</text>
+<text x="168" y="540" font-size="13.5" fill="#656d76">At the end it swaps the working docs for one feature summary:</text>
+<text x="570" y="540" font-size="12.5" font-family="ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace" fill="#1f2328">docs/&lt;slug&gt;.md</text>
+<path d="M 51 578 l 7 7 l -7 7 l -7 -7 z" fill="#fff8c5" stroke="#d4a72c" stroke-width="1.5"/>
+<text x="70" y="589" font-size="12" fill="#656d76">approval gate: the pipeline waits for you. Two more sit inside the skills: /grill-me's risky assumptions, and /build-me's commit plan.</text>
 </svg>
