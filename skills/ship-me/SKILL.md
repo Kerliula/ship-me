@@ -2,10 +2,11 @@
 name: ship-me
 description: >
   Run the full pipeline end to end for one problem or feature: /grill-me,
-  /solve-me, /build-me, /verify-me, /test-me, in order. The interactive
+  /solve-me (reviewed by /critique-me), /build-me, /verify-me, /test-me,
+  in order. The interactive
   phases (grill-me's interrogation, build-me's per-commit review) run right
   here in this conversation. The non-interactive phases (solve-me,
-  verify-me, test-me) each run as a freshly spawned, separate session with
+  critique-me, verify-me, test-me) each run as a freshly spawned, separate session with
   no memory of this conversation. The developer keeps three approval
   gates: the solution options after solve-me, the commit plan at the
   start of build-me, and the go-ahead for tests after verify-me. Use when
@@ -32,6 +33,8 @@ so the whole run stays linked together:
 
 - `docs/grilling/<slug>.md`
 - `docs/solutions/<slug>.md`
+- `docs/breakers/<slug>.md`
+- `docs/critique/<slug>.md`
 - `docs/build/<slug>.md`
 - `docs/verification/<slug>.md`
 
@@ -46,7 +49,8 @@ first phase that's still missing — don't redo finished work.
 | # | Phase | Skill | Where it runs | Produces |
 |---|-------|-------|----------------|----------|
 | 1 | Understand the problem | `/grill-me` | **This conversation** | `docs/grilling/<slug>.md` |
-| 2 | Design the solution | `/solve-me` | **Spawned session** | `docs/solutions/<slug>.md` |
+| 2 | Design the solution | `/solve-me` | **Spawned session** | `docs/solutions/<slug>.md`, `docs/breakers/<slug>.md` |
+| 2b | Critique the solution | `/critique-me` | **Spawned session** | `docs/critique/<slug>.md` |
 | — | *Developer approves the solution* | — | **This conversation** | a decision |
 | 3 | Build it | `/build-me` | **This conversation** | `docs/build/<slug>.md`, then code, commit by commit |
 | — | *Developer approves the commit plan (inside Phase 3, before code)* | — | **This conversation** | a decision |
@@ -80,7 +84,8 @@ Once the grill-me file exists, immediately spawn a new agent. Its
 prompt must be self-contained — it has no access to this conversation:
 
 > "Run the `/solve-me` skill using `docs/grilling/<slug>.md` as the
-> problem write-up. Produce `docs/solutions/<slug>.md`. When finished,
+> problem write-up. Produce `docs/solutions/<slug>.md` and
+> `docs/breakers/<slug>.md`. When finished,
 > report the file path and a one-paragraph summary of what was
 > decided."
 
@@ -92,6 +97,61 @@ When its completion notification arrives, confirm
 `docs/solutions/<slug>.md` actually exists and looks complete (has a
 recommendation for every sub-problem) before moving on. If it doesn't, stop
 and tell the developer instead of pushing forward.
+
+### Phase 2b — solve-me ↔ critique-me dialogue (spawned)
+
+A solution should not reach the developer unchallenged. solve-me and
+critique-me now talk it out: solve-me proposes its best solution,
+critique-me tries to break it, solve-me answers, and so on, until the
+critic has nothing left that must change.
+
+Spawn **one** critique-me agent, separate from the solve-me agent — a
+session never grades its own work:
+
+> "Run the `/critique-me` skill. Solution: `docs/solutions/<slug>.md`.
+> Problem: `docs/grilling/<slug>.md`. What can break it:
+> `docs/breakers/<slug>.md`. Produce
+> `docs/critique/<slug>.md`. When finished, report the file path, the
+> verdict, and each open must-fix finding in one line."
+
+Then run the dialogue. **Keep both agents alive for the whole
+dialogue** and continue them with `SendMessage` — don't spawn fresh
+ones each round. Each side has to remember what it already argued, or
+the same point gets relitigated every round.
+
+1. **Critic's turn.** Wait for critique-me to finish its round.
+   - Verdict **Holds** (no open must-fix) → the dialogue is over. Go
+     to the gate.
+   - Otherwise → step 2.
+2. **Solver's turn.** Send to the solve-me agent:
+
+   > "Round N critique is in `docs/critique/<slug>.md`. Revise
+   > `docs/solutions/<slug>.md` as your skill's 'Revising after a
+   > critique' section says. Answer every open must-fix finding:
+   > fixed, or disagreed with evidence. Report what changed."
+
+3. **Critic's turn again.** Send to the critique-me agent:
+
+   > "The solution was revised for round N. Run your next round as
+   > your skill's 'Next rounds' section says."
+
+   Back to step 1.
+
+Only relay — don't take part. Never add your own findings, soften the
+critic's, or answer for the solver.
+
+**When to stop without agreement.** End the dialogue and take what's
+left to the gate as open questions when either:
+
+- **Deadlock:** a round ends with the same must-fix findings open as
+  the round before and nothing in the solution changed. The two sides
+  disagree on something only the developer can decide.
+- **Round limit:** 4 critique rounds have run. Past that, they're
+  circling, not converging.
+
+Tell the developer in one line when each round finishes (e.g. "Round 2:
+2 of 3 fixed, 1 disagreed — critic reviewing the reply") so the
+background work isn't silent.
 
 ### Gate — the developer reviews the solution before anything is built
 
@@ -108,16 +168,20 @@ Per sub-problem, two lines:
 > Recommended: <option> — <its one-line why, copied from the file>
 > Runner-up: <strongest rejected option> — <one line on why it lost>
 
-Then list each item from the file's "Open trade-offs" section as its
-own numbered question. Give the file path for the full reasoning, and
+Under it, one line on the dialogue: how many rounds it took, how it
+ended (agreed, deadlock, or round limit), and what changed because of
+it. Then list as numbered questions: each item from the solution's
+"Open trade-offs" section, each **Worth considering** finding still
+open, and every must-fix finding the two sides didn't settle — with
+both sides' one-line position, so you can pick. Give the file path for the full reasoning, and
 ask plainly:
 
 > "Keep these recommendations, or change any of them? And I need your
 > answer on each open trade-off above — nothing gets built until you
 > say go."
 
-Don't proceed while any open trade-off is unanswered — those are
-exactly the questions solve-me deferred to the developer.
+Don't proceed while any of those questions is unanswered — they are
+exactly what solve-me and critique-me deferred to the developer.
 
 Wait for an actual answer. If they change a recommendation, update the
 solve-me file (or send the change to that session) so the file and the
@@ -148,7 +212,8 @@ commit has been built and approved before moving to Phase 4.
 Once build-me has finished all its commits, spawn a new agent:
 
 > "Run the `/verify-me` skill. Problem: `docs/grilling/<slug>.md`.
-> Solution: `docs/solutions/<slug>.md`. What was built: [recent
+> Solution: `docs/solutions/<slug>.md`. What can break it:
+> `docs/breakers/<slug>.md`. What was built: [recent
 > commits / changed files from this build-me run — list them
 > explicitly in the prompt, since the new session can't see this
 > conversation]. Produce `docs/verification/<slug>.md`. When finished,
@@ -194,29 +259,84 @@ When it finishes, relay its explanation of each test to the developer.
 
 ## Wrapping up
 
-Once all five phases are done, give the developer one short summary:
-links to the four docs (grilling, solutions, build, verification),
-what was built, what was tested, and anything
-still open (dropped test candidates, unresolved trade-offs the
-spawned phases flagged).
+Once test-me has finished and all five phases are done, replace the
+working docs with one summary, so the commit carries the feature's
+record and not the pipeline's scaffolding.
 
-Every phase already refreshed the map as it wrote its file, so by now
-it is current — those refreshes are the phase's own job, and a spawned
-phase does its own. Don't run them on its behalf, and don't treat a
-hole a phase reported as a reason to hold up the pipeline: none of them
-are gates.
+### 1. Write the summary
 
-Then run `/map-me` in this conversation. It rebuilds the map across
-every run in the project, not just this one, and reports what the
-artifacts don't account for — requirements nothing proved, decisions
-made mid-build that never hit a gate, and files this run has now
-touched that earlier runs touched too. It's a report, not a phase:
-nothing gets fixed, and it doesn't gate anything.
+Write `docs/<slug>.md`. It is the only file from this run that stays,
+so everything worth keeping from the phase files has to be in it —
+once they're deleted, this is the record. Plain language, short,
+scannable:
 
-Finish by pasting the **Requirements (copy-paste ready)** block from
-`docs/grilling/<slug>.md` — what was built, what was deliberately not
-built, and how it was checked — so it can go straight into the PR
-description or commit body.
+```markdown
+# <Feature title, plain language>
+
+## What changed
+<two or three sentences: what the app does now that it didn't before,
+and why it was needed>
+
+## Requirements
+<the Requirements (copy-paste ready) block from the grilling file,
+as-is: what was built, what was deliberately not built, how it was
+checked>
+
+## Big picture
+<the final diagram from the build file, every commit marked (Done)>
+
+## Key decisions
+- <sub-problem, in a few words> → <chosen option> — <its one-line why>.
+  Not <strongest rejected option>: <its one-line Rejected reason>.
+
+## Decided during the build
+<every Unplanned: entry from the build file, one line each — or "none">
+
+## What can break it — and how it's handled
+<one line per B-number: the case → the commit that handles it → ✅ / ❌
+from verification>
+
+## How it was verified
+<one line per R-number: ✅ / ❌ / skipped, from the verification
+coverage table>
+
+## Tests added
+<test file paths, each with its one-sentence "catches this bug">
+
+## Still open
+<unresolved trade-offs, dropped test candidates, anything the
+critique dialogue or verification left for later — or "none">
+```
+
+Check every section is filled from the real files before going on.
+
+### 2. Remove the working docs
+
+These are the files this run created:
+
+- `docs/grilling/<slug>.md`
+- `docs/solutions/<slug>.md`
+- `docs/breakers/<slug>.md`
+- `docs/critique/<slug>.md`
+- `docs/build/<slug>.md`
+- `docs/verification/<slug>.md`
+
+List them to the developer with the summary's path and ask once:
+"Delete these now that `docs/<slug>.md` holds the summary?" Untracked
+files can't be recovered after deletion, so this needs a real yes.
+
+On yes, delete them before the commit — `git rm` for any that are
+already tracked, a plain delete for the rest — and remove any of those
+`docs/` sub-folders that are now empty. Delete only these six files,
+never other runs' files that share the folders.
+
+### 3. Hand over
+
+Give the developer one short message: the summary's path, what was
+built, what was tested, anything still open, and a suggested commit
+message for the summary and deletions (subject line only, no trailers,
+same rule as `/build-me`). Then paste the **Requirements** block from
+the summary so it can go straight into the PR description.
 
 ---
 
@@ -270,11 +390,14 @@ description or commit body.
   criteria actually met (not assumed).
 - Every spawned phase ran in its own fresh session, triggered once its
   input was ready and its gate (if it has one) was cleared.
+- The solution went through a solve-me ↔ critique-me dialogue in two
+  separate sessions before the developer saw it, and ended in
+  agreement, deadlock, or the 4-round limit — never cut short.
 - The developer explicitly approved the solution, the commit plan, and
   the move to tests.
-- The developer has the four output docs and the final test suite,
-  plus a short summary tying the whole run together and the
-  copy-paste requirements block.
-- Each phase refreshed the map as it wrote its artifact, and `/map-me`
-  ran at the end. Anything either found was reported rather than
-  quietly fixed, and nothing was held up because of it.
+- `docs/<slug>.md` holds the full summary of the feature, filled from
+  the real phase files, and the final test suite exists.
+- The six working docs were deleted after the developer said yes —
+  and only those six.
+- The developer has the summary path, a suggested commit message, and
+  the copy-paste requirements block.

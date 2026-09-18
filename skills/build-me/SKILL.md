@@ -8,9 +8,9 @@ description: >
   approval before writing any code. Then builds one commit at a time,
   saying up front and afterwards why that commit is needed and which
   numbered requirement it serves, and stopping after each one for the
-  developer to review and edit. Every piece of new logic gets a short
-  plain-language comment explaining what it does and why that approach was
-  picked — meant to be deleted once reviewed. Suggests a commit message
+  developer to review and edit. Every piece of new logic gets a one-line
+  plain-language comment saying why it's there — meant to be deleted
+  once reviewed. Suggests a commit message
   after each commit. Always implements the option the developer already
   picked in the /solve-me file — never a different one. Use after
   /solve-me, when it's time to actually write code.
@@ -101,6 +101,8 @@ Problem:  docs/grilling/<slug>.md
 - **From:** sub-problem 1 of the solution
 - **Builds:** Option <X> of sub-problem 1 — <one-line reason it won>
 - **Serves:** R2, R5
+- **Handles:** B1, B4 <the cases from docs/breakers/<slug>.md this
+  commit makes safe>
 - **Why we need it:** <one or two plain sentences, straight from the
   requirement — what the app can't do without this>
 - **Touches:** <files / areas — prose is fine here; this line gets
@@ -115,9 +117,110 @@ The plan is also the only durable record of what happened, so two of
 those lines get rewritten later rather than staying as they were
 approved — see Step 4.
 
-Once the plan file exists, refresh the map (see below) — at this stage
-it catches an approved requirement the plan doesn't cover, before a
-line of code is written.
+### Draw the big picture
+
+Right after the plan, draw one diagram of what the whole build does to
+the codebase: the database tables and the files, grouped by the
+project's own layers, each tagged with the commit that creates or
+changes it. The developer should see at a glance which files and
+tables this feature touches, before approving and again after every
+commit (Step 4).
+
+**Content:**
+
+- **Layers come from this project**, as learned in Step 1, in the
+  order data flows: database first, then models, then background work
+  and HTTP side by side if they're parallel, then the front end. Use
+  the project's real layer names; skip layers the build doesn't touch.
+- **Database layer:** every table the build creates or changes, with
+  its key columns and relations (`user_id → users`). New columns on an
+  existing table are listed on their own. Tables that are only read
+  are listed once, marked `(read only)`.
+- **Every other layer:** one line per file, as a path relative to the
+  repo root (shorten the folder only if it won't fit, never the file
+  name). Add a sub-line only when it matters for the picture — a
+  relation, a route, the job's trigger.
+- **Mark each item:** `+` new, `~` changed, `·` used but unchanged.
+- **Tag each item with the commits that touch it**, `[2]` or `[1] [3]`,
+  and a status after the tags:
+  - `(Done)` — built and approved
+  - `(◄ This commit)` — just built, waiting for review
+  - `(Next)` — the one that comes after
+  - nothing — still planned
+  - a plan change right there, e.g. `(Moved earlier)`, `(Split)`
+
+Before the first commit, paths come from the plan's best guess using
+the project's conventions. After each commit, use the real paths from
+its `Touches:` line — add files that weren't planned, drop ones that
+never got touched.
+
+**Format:**
+
+1. Output it strictly inside a ```` ```text ```` code block.
+2. Use standard Unicode box-drawing characters (`┌ ┐ └ ┘ │ ─ ├ ┤ ┬ ┴ ┼`)
+   and flow arrows (`▼`, `►`).
+3. Align every vertical line and corner joint on a fixed monospace
+   grid. Every row of a box must be exactly as wide as its top edge —
+   count the characters. Keep it under 80 columns; wrap a long path's
+   tags onto the next line rather than widening the box.
+4. One box per layer, each with a numbered header in capitals
+   (e.g. `1. DATABASE`).
+5. Keep box sizes uniform: full-width boxes for layers everything
+   flows through, equal-width boxes side by side for parallel layers.
+   Every arrow starts from a `┬` on a box edge — never from empty
+   space. When side-by-side boxes feed one box below, join their
+   arrows with a connector line (`└────┬────┘`) and send one arrow on.
+
+Example of the expected shape (after commit 4 of 5):
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                 1. DATABASE                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  + export_requests                                   [1] (Done)             │
+│      id · user_id → users · contact_list_id → contact_lists                 │
+│      state · file_path · failure_reason · created_at                        │
+│  · contact_lists, contacts                           (read only)            │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                  2. MODELS                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  + app/Models/ExportRequest.php                      [1] [2] (Done)         │
+│      belongsTo User · belongsTo ContactList                                 │
+└──────────────────┬───────────────────────────────────────┬──────────────────┘
+                   │                                       │
+                   ▼                                       ▼
+┌────────────────────────────────────┐   ┌────────────────────────────────────┐
+│ 3. BACKGROUND WORK                 │   │ 4. HTTP                            │
+├────────────────────────────────────┤   ├────────────────────────────────────┤
+│ + app/Jobs/BuildContactExport.php  │   │ ~ ContactExportController.php      │
+│     [2] (Done)                     │   │     [1] [3] (Done)                 │
+│ ~ config/filesystems.php           │   │     [4] (◄ This commit)            │
+│     [2] (Done)                     │   │ + ContactExportDownloadController  │
+│ + app/Console/Commands/            │   │     [5] (Next)                     │
+│     PurgeExpiredExports.php  [5]   │   │ + ExportRequestPolicy.php  [5]     │
+│                                    │   │ ~ routes/web.php  [3] (Done)       │
+└──────────────────┬─────────────────┘   └──────────────────┬─────────────────┘
+                   │                                       │
+                   └───────────────────┬───────────────────┘
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                 5. FRONT END                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  + resources/js/contacts/export-status.js            [3] (Done)             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+Save the diagram in `docs/build/<slug>.md` under a `## Big picture`
+heading, right below the `Problem:` line, and keep it current there:
+every time you re-draw it, replace the saved one.
+
+Before asking for approval, check the plan against
+`docs/breakers/<slug>.md`: every B-number must appear in some commit's
+`Handles:` line. List any that don't, and ask the developer whether to
+add them to a commit or knowingly leave them out.
 
 Then **stop and ask the developer to approve the plan** — approve,
 reorder, merge, split, or drop commits. Do not write a single line of
@@ -144,16 +247,36 @@ For the current commit only:
 1. Write the code needed for that commit, following this project's
    existing patterns (see Step 1) and standard Laravel best practices.
 2. Above or beside any non-obvious piece of logic, leave a short
-   comment in plain, easy language explaining two things: what this
-   code does, and why this approach was picked over the alternatives
-   from the solve-me file. Keep it to one or two short lines.
-   Prefix every one of these with `// WHY:` (or the equivalent comment
-   syntax for the file type) so they're easy to find and delete later.
-   Example:
+   `// WHY:` comment (or the equivalent comment syntax for the file
+   type) so it's easy to find and delete later. It should be quick to
+   read, like a note a teammate leaves in the margin. Rules:
+
+   - **One line, two at most.** About 15 words. If it needs more, the
+     reason is too tangled: say only the main one.
+   - **Say the reason, not the code.** The reader can see *what* the
+     line does. Tell them what goes wrong without it, or what it
+     protects.
+   - **Plain words.** Use words a new teammate would know. No jargon,
+     no requirement numbers, no names of options that were rejected.
+   - **One idea per comment.** No "and also", no chain of clauses.
+   - **Stay accurate.** Shorter must not mean vaguer or wrong. If a
+     simple version would be misleading, keep the detail that matters
+     and drop the rest.
+
+   Examples:
 
    ```php
-   // WHY: checks the confirm token before saving, so a stale link
-   // can never overwrite a newer email change.
+   // Too long:
+   // WHY: hands back the export already running instead of refusing the
+   // second click, so impatient double-clicking looks the same as one
+   // click. Refusing would satisfy R3 too, but turns ordinary behavior
+   // into an error the person has to understand.
+
+   // Good:
+   // WHY: a second click returns the running export, so double-clicks aren't errors.
+
+   // Good:
+   // WHY: check the token first, so an old link can't overwrite a newer email.
    ```
 
    These comments are scaffolding for review, not permanent
@@ -173,7 +296,19 @@ Once the commit's code is written:
    and restate in one or two plain sentences **why this was needed** —
    which requirement (R-number) it satisfies and what the app can now
    do that it couldn't before. Short: three lines, not an essay.
-2. **Go back to `docs/build/<slug>.md` and update this commit's
+   Then list the breakers this commit handles, one line each —
+   `B4 zero contacts → header-only file` — so the developer can check
+   each against the code.
+2. **Show the big picture again.** Re-draw the diagram from Step 2
+   with the statuses updated: this commit `(◄ This commit)`, earlier
+   ones `(Done)`, the following one `(Next)`. Swap this commit's
+   guessed paths for the real ones it touched, and reflect any plan
+   change the developer made. Under it, one plain line on how this
+   commit fits: which files and tables now work together, and what
+   that unlocks. Every commit,
+   every time — never "same as before". Replace the saved copy in
+   `docs/build/<slug>.md`.
+3. **Go back to `docs/build/<slug>.md` and update this commit's
    section.** Two lines change:
 
    - **`Touches:`** — replace the plan's prose with the real files you
@@ -184,8 +319,8 @@ Once the commit's code is written:
      - **Touches:** `app/Models/ExportRequest.php`, `app/Http/Controllers/ExportController.php`
      ```
 
-     Backticked paths are what makes this commit linkable to the files
-     it changed. Prose here is unlinkable, so the connection is lost.
+     Real paths let the developer see at a glance what this commit
+     changed. Prose guesses from the plan don't.
 
    - **`Unplanned:`** — every decision you made while writing this
      commit that the solve-me file didn't already settle. One line
@@ -207,51 +342,32 @@ Once the commit's code is written:
      something and this is what I picked" is exactly the kind of entry
      that belongs here.
 
-3. Refresh the map (see below). This is the step that matters most —
-   it is where the file paths and the mid-build decisions you just
-   wrote actually enter the graph.
 4. Say the same unplanned decisions out loud to the developer too, and
    flag anything you're unsure about.
 5. Suggest a commit message for this commit, matching this repo's
-   existing commit style (check `git log` if unsure). Present it as a
-   suggestion only — do not run `git commit` yourself unless the
-   developer explicitly asks you to.
+   existing commit style (check `git log` if unsure). The message is
+   only the subject line, plus a short body if the change really needs
+   one. Nothing else: no `Co-Authored-By:`, `Signed-off-by:` or other
+   trailers, no "Generated with" lines, no emoji, no links. This holds
+   even if the developer asks you to run the commit yourself. Present it
+   as a suggestion only — do not run `git commit` yourself unless the
+   developer explicitly asks you to. Example:
+
+   ```
+   Reuse an in-progress export instead of starting a second
+   ```
 6. **Stop.** Wait for the developer to review, edit, or approve before
    moving to the next commit. Never chain commits on your own
    initiative, even if the plan is long. If the developer explicitly
    pre-approves a named range ("build 3 through 5 without stopping"),
    honor it: build them in sequence, keep the per-commit WHY comments
    and R-number framing, and give the per-commit summaries together at
-   the end of the range.
+   the end of the range, with one diagram showing the whole range
+   marked `(Done)`.
 
 When the developer comes back (possibly with edits, possibly just
 "next"), pick up with the next commit in the plan, re-checking Step 1's
 conventions against anything they changed.
-
----
-
-## Refresh the map
-
-You just wrote something the map is built from, so bring it up to date
-before moving on:
-
-```bash
-node ~/.claude/skills/map-me/map-me.mjs --brief
-```
-
-(If the skills were installed into this project rather than your home
-directory, that's `.claude/skills/map-me/map-me.mjs`. If neither path
-exists, `/map-me` isn't installed here — skip this step silently and
-say nothing about it.)
-
-`--brief` prints nothing at all unless something changed. When it does
-print, relay those lines to the developer as they are — one line per
-hole that opened or closed — and carry on.
-
-**It is never a gate.** Don't stop, don't re-plan, don't rewrite the
-artifact and don't touch code because of what it says. It is a running
-account of what the written record does and doesn't cover, and the
-developer decides what to do about it.
 
 ---
 
@@ -261,6 +377,11 @@ developer decides what to do about it.
   disagreements; don't act on them unilaterally.
 - The commit plan is written to `docs/build/<slug>.md` and explicitly
   approved by the developer before any code is written.
+- Every case in `docs/breakers/<slug>.md` is assigned to a commit's
+  `Handles:` line before the plan is approved — or listed under the
+  plan as knowingly not handled, with the developer's OK. After each
+  commit, check its code really handles every case it claims; if one
+  isn't, say so instead of marking it done.
 - Every commit names the requirement(s) it serves, before and after
   it's built. A commit that serves no requirement doesn't get built.
 - **After every commit, `docs/build/<slug>.md` gets updated**: real
@@ -268,17 +389,14 @@ developer decides what to do about it.
   `none`). Never leave a built commit carrying the plan's guesses.
 - Never write `Unplanned: none` to save a step. An empty list and a
   missing record look identical later and mean opposite things.
-- Refresh the map after writing the plan and after every commit. It is
-  a report, never a gate — it does not pause the build or change what
-  gets built.
 - Nothing on the out-of-scope list gets built, however small or
   convenient it looks while you're already in the file.
 - One commit, one stop, by default. Never chain commits on your own
   initiative — but if the developer explicitly names a range to batch,
   that's their pace to set, and every per-commit artifact (WHY
   comments, R-framing, summary, suggested message) still gets made.
-- Every non-obvious piece of logic gets a `// WHY:` comment in plain
-  language. Skip it only for code so simple the reasoning is obvious
+- Every non-obvious piece of logic gets a one-line `// WHY:` comment
+  in plain language that gives the reason, not a description of the code. Skip it only for code so simple the reasoning is obvious
   (e.g. a straightforward getter).
 - Match existing project conventions over generic "best practice" when
   the two conflict — consistency with the codebase wins.
@@ -295,19 +413,22 @@ developer decides what to do about it.
 
 ## Done means
 
+- A big-picture diagram was shown with the plan, re-drawn after every
+  commit with current statuses and a line on how the commit fits, and
+  the latest version is saved in `docs/build/<slug>.md`.
 - The commit plan exists at `docs/build/<slug>.md` and was approved by
   the developer before building started.
 - Every commit from the plan has been built, reviewed, and approved.
 - Every commit paused for review before the next one started.
 - Every commit was introduced and closed with a short plain-language
   reason tied to a requirement number.
-- All non-obvious logic has a short `// WHY:` comment in plain
-  language, tied to the choice made in the solve-me file.
+- All non-obvious logic has a one-line `// WHY:` comment in plain
+  language that states the reason behind the choice made in the
+  solve-me file.
 - Every built commit's section in `docs/build/<slug>.md` carries the
   real file paths it touched, in backticks, and an `Unplanned:` list
   of what got decided mid-build (or `none`).
-- The map was refreshed after the plan was written and after every
-  commit, and anything it reported was passed on rather than acted on.
-- A commit message was suggested for every commit.
+- A commit message was suggested for every commit, with no trailers,
+  co-author lines or other extra information.
 - No option was implemented other than the one already recommended in
   the solve-me file, unless the developer explicitly changed it.
