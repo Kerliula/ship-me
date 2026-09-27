@@ -10,7 +10,10 @@ description: >
   numbered requirement it serves, and stopping after each one for the
   developer to review and edit. Every piece of new logic gets a one-line
   plain-language comment saying why it's there — meant to be deleted
-  once reviewed. Suggests a commit message
+  once reviewed. After each commit it runs the project's own fast checks
+  (syntax, formatter, static analysis) and fixes what it broke before
+  handing over for review; the related existing tests run once, after
+  the last commit. Suggests a commit message
   after each commit. Always implements the option the developer already
   picked in the /solve-me file — never a different one. Use after
   /solve-me, when it's time to actually write code.
@@ -51,6 +54,16 @@ the one you personally think is best. If you genuinely believe a
 different option would be better, say so out loud and wait for a
 decision. Never silently swap it.
 
+**A SMALL run has no solve-me file, on purpose.** When `/ship-me` says
+the run is SMALL, build straight from the grilling file: write the one
+direct approach on each commit's `Builds:` line, and approving the plan
+approves that approach. Cite the grilling file's edge cases in
+`Handles:`, since there is no breakers file. If you find a real choice
+between two genuinely different ways to build it, don't pick one —
+stop and say so. The run steps up to MEDIUM and `/solve-me` decides it.
+This applies only when `/ship-me` sized the run SMALL; run by hand,
+you still need a solution write-up.
+
 ---
 
 ## Step 1 — Learn how this project already does things
@@ -66,6 +79,71 @@ New code should look like it was written by the same person who wrote
 the rest of the app — same conventions, same idioms, same file
 locations. Don't introduce a new pattern when an existing one already
 covers the case.
+
+### Find what else reads what you'll change
+
+A change can break code it never touches. Example: quick-service
+orders have no table, and the stats code grouped every order by its
+table, so it failed as soon as one arrived. Before planning, work out
+what this build changes about shared things, and find everything that
+reads them.
+
+Start from the grilling file's **What else relies on this** table and
+the breakers file's **Other features** group, if they exist. Then
+search the code yourself, since those were written before anyone knew
+the exact changes:
+
+- **A column added, removed, renamed, made optional, or changed in
+  meaning:** search for the column name and the relation name
+  (`->table`, `with('table')`, `whereHas('table'`, `->table->name`),
+  plus joins and raw SQL (`join(`, `DB::`, `selectRaw`). Reading
+  something through an optional relation without a null check crashes.
+  An inner join doesn't crash, it silently drops rows, and the numbers
+  come out wrong.
+- **A new status, type, or mode value:** find every place that
+  branches on that field: `match`, `switch`, `if`, `where`/`whereIn`
+  on it, scopes, the enum's cases, validation `in:` rules, policies,
+  labels and translations, and front-end maps keyed by it. A list that
+  covers every case today misses the new one. A `default`/`else`
+  branch quietly treats it as something it isn't.
+- **A method, class, event, or response shape:** every caller,
+  listener, queued job (old payloads may already be waiting in the
+  queue), and API resource, plus whoever consumes it, including the
+  front end.
+
+Always look where nobody looks: `app/Console` and the schedule,
+`app/Jobs`, `app/Listeners`, `app/Observers`, exports, mail and
+notifications, admin panels (Filament, Nova), Blade views, the JS
+front end, and anything that builds stats, reports or dashboards.
+Then go one step further: what consumes *their* output?
+
+Each reader you find goes into a commit's `Ripple:` line in the plan.
+It's either handled by a commit, or safe with a one-line reason. A
+reader that must change but isn't in the plan is the developer's
+call: add it to a commit, or leave it out knowingly. Ask when you
+present the plan. Don't quietly widen a commit to fix it.
+
+### Find the checks this project already runs
+
+Find the fast checks the project already uses, so every commit can be
+checked the same way the team's own code is. Look at:
+
+- `composer.json` scripts and `package.json` scripts
+- the CI config (`.github/workflows/`, `.gitlab-ci.yml`, …)
+- tool config in the repo root: `pint.json`, `phpstan.neon(.dist)`,
+  `.php-cs-fixer*`, `.eslintrc*`, `tsconfig.json`
+
+Keep only the fast ones: syntax (`php -l` is always available),
+formatter, static analysis, and a type check if the build touches the
+front end. The test suite isn't on this list; it runs once, at the end
+(Step 5). Use the project's own commands and settings, and run them on
+just the files a commit changed wherever the tool allows it, so they
+stay fast. Never install, configure, or tighten a tool the project
+doesn't already have.
+
+Run them once now, before any code is written, to get the **baseline**:
+what already fails on the untouched codebase. Only failures a commit
+adds are that commit's to fix.
 
 ---
 
@@ -96,8 +174,15 @@ approving it also ratifies the option picks listed under **Builds:**.
 
 Solution: docs/solutions/<slug>.md
 Problem:  docs/grilling/<slug>.md
+Plan:     waiting for approval  ← becomes `approved <date>`
+Base commit: <short SHA of HEAD when the plan was approved>
+
+## Checks
+- `<command>` — <what it checks> — baseline: <clean / N existing errors>
+- `<command>` — …
 
 ## Commit 1 — <short imperative title>
+- **Status:** planned  ← `built — waiting for review`, then `approved`
 - **From:** sub-problem 1 of the solution
 - **Builds:** Option <X> of sub-problem 1 — <one-line reason it won>
 - **Serves:** R2, R5
@@ -108,14 +193,20 @@ Problem:  docs/grilling/<slug>.md
 - **Touches:** <files / areas — prose is fine here; this line gets
   rewritten with real paths once the commit is built>
 - **Done when:** <the observable thing that is true afterwards>
+- **Ripple:** <other code that reads what this commit changes — each
+  one `handled here`, `handled in commit N`, or `safe — <why>`;
+  re-checked against the real diff once the commit is built>
+- **Checks:** _(filled in after the commit is built — leave it)_
 - **Unplanned:** _(filled in after the commit is built — leave it)_
 
 ## Commit 2 — …
 ```
 
-The plan is also the only durable record of what happened, so two of
+The plan is also the only durable record of what happened, so some of
 those lines get rewritten later rather than staying as they were
-approved — see Step 4.
+approved — see Step 4. `Plan:` and each commit's `Status:` are what
+a later session reads to know where the build stopped. Keep them true
+at every moment, not just at the end.
 
 ### Draw the big picture
 
@@ -214,7 +305,8 @@ Example of the expected shape (after commit 4 of 5):
 ```
 
 Save the diagram in `docs/build/<slug>.md` under a `## Big picture`
-heading, right below the `Problem:` line, and keep it current there:
+heading, right below the header lines (`Solution:` to `Base
+commit:`), and keep it current there:
 every time you re-draw it, replace the saved one.
 
 Before asking for approval, check the plan against
@@ -226,6 +318,17 @@ Then **stop and ask the developer to approve the plan** — approve,
 reorder, merge, split, or drop commits. Do not write a single line of
 code before they've said yes. If they change it, update the file
 before starting.
+
+On their yes, before the first line of code:
+
+- Set `Plan:` to `approved <date>`.
+- Record `Base commit:` — the short SHA of `HEAD` right now. Everything
+  this build changes is the difference from that commit, which is how
+  `/verify-me` and a resumed session find out what was built.
+- Run `git status --porcelain`. If the working tree already has
+  changes, they would get mixed into this build's diff. Name the files
+  and ask the developer to commit or stash them, or to go ahead
+  knowingly. Ask only when the tree isn't clean.
 
 If the plan is a single commit, fold the two gates into one: present
 the plan and ask "approve and build it?" — one yes covers both.
@@ -286,11 +389,66 @@ For the current commit only:
 3. Do not touch files outside this commit's scope.
 4. Do not start the next commit yet.
 
+### Check what else it reaches
+
+Now that the change is real, redo the search from "Find what else
+reads what you'll change" against what this commit **actually**
+changed: its new values, the columns and relations it made optional
+or changed, and the methods whose input or output changed. The plan's
+`Ripple:` line was a forecast. This is the check.
+
+Give every reader one verdict:
+
+- **`handled here`** — this commit changed it to cope.
+- **`handled in commit N`** — a later commit covers it. Until then,
+  say what's broken in between.
+- **`safe — <why>`** — one line of real reason, from the code: *"only
+  loads orders that have a table"*. "Probably fine" is not a reason.
+- **`breaks — not in the plan`** — stop before handing the commit
+  over. Name the reader, what would happen (crash, wrong numbers,
+  missing rows), and the options: fix it in this commit, add a commit,
+  or leave it out knowingly. The developer picks.
+- **`unsure`** — say so plainly, and name what `/verify-me` should try
+  to find out.
+
+Write the result on the commit's `Ripple:` line with real file paths:
+
+```
+- **Ripple:**
+  - `app/Services/DailyStats.php` — grouped by table → handled here (quick-service counted as "Counter")
+  - `resources/views/floor-plan.blade.php` — safe — only loads orders that have a table
+```
+
+### Run the checks before handing it over
+
+Run the checks from Step 1 on the files this commit changed. The
+developer should never review code that fails its own project's
+checks.
+
+- **Something this commit broke** (not in the baseline): fix it inside
+  this commit's scope and run the checks again. If the formatter only
+  reports style, run the project's formatter on this commit's files and
+  move on.
+- **The same error survives 3 fix attempts,** or fixing it would mean
+  touching files outside this commit's scope: stop. Show the error and
+  what you tried, and ask the developer. Don't loosen a rule, add an
+  ignore line, or add to the static-analysis baseline to make a check
+  pass.
+- **It was already failing in the baseline:** leave it alone. Mention it
+  once, in the first commit where it shows up.
+
+Record the result on the commit's `Checks:` line in
+`docs/build/<slug>.md`, e.g.
+`` `php -l` ✅ · `pint` ✅ (reformatted 1 file) · `phpstan` ✅ ``.
+
+Run no tests here. They take too long per commit; the related existing
+tests run once, after the last commit (Step 5).
+
 ---
 
 ## Step 4 — Wrap up the commit
 
-Once the commit's code is written:
+Once the commit's code is written and its checks pass:
 
 1. Briefly tell the developer what you built and where (file paths),
    and restate in one or two plain sentences **why this was needed** —
@@ -298,7 +456,10 @@ Once the commit's code is written:
    do that it couldn't before. Short: three lines, not an essay.
    Then list the breakers this commit handles, one line each —
    `B4 zero contacts → header-only file` — so the developer can check
-   each against the code.
+   each against the code. Then list the other code this commit
+   reaches, one line each with its verdict, the same as its `Ripple:`
+   line. Flag anything `unsure`. End with the checks result in one
+   line, the same as its `Checks:` line.
 2. **Show the big picture again.** Re-draw the diagram from Step 2
    with the statuses updated: this commit `(◄ This commit)`, earlier
    ones `(Done)`, the following one `(Next)`. Swap this commit's
@@ -309,7 +470,8 @@ Once the commit's code is written:
    every time — never "same as before". Replace the saved copy in
    `docs/build/<slug>.md`.
 3. **Go back to `docs/build/<slug>.md` and update this commit's
-   section.** Two lines change:
+   section.** Set `Status:` to `built — waiting for review`, and fill
+   in `Ripple:` and `Checks:` (Step 3). Two more lines change:
 
    - **`Touches:`** — replace the plan's prose with the real files you
      actually changed, each in backticks, comma-separated, as paths
@@ -366,8 +528,35 @@ Once the commit's code is written:
    marked `(Done)`.
 
 When the developer comes back (possibly with edits, possibly just
-"next"), pick up with the next commit in the plan, re-checking Step 1's
-conventions against anything they changed.
+"next"), set the reviewed commit's `Status:` to `approved`. If they
+edited its files, run its checks again. Then pick up with the next
+commit in the plan, re-checking Step 1's conventions against anything
+they changed.
+
+---
+
+## Step 5 — Run the related existing tests, once
+
+After the last commit is approved, run the project's existing tests
+that cover what this build changed, just once. Don't run them after
+each commit, and don't run the whole suite. Find them by searching the
+test folders for the classes, routes, and tables the build touched (use
+the `Touches:` lines), and run just those files with the project's own
+test command.
+
+- **All pass:** say so in one line, list the test files that ran, and
+  add a `## Final check` section to `docs/build/<slug>.md` with the
+  same.
+- **Something fails:** don't move on, and don't edit a test to make it
+  pass. Show each failing test and which commit's files it covers. Say
+  whether it looks like this build broke it or it was already failing.
+  If you're not sure, say that. The developer decides whether to fix it
+  now, and a fix goes through the same build-check-review loop as any
+  commit.
+- **No existing test covers the changed code:** say so. That's
+  expected; `/verify-me` and `/test-me` cover it.
+
+This step runs existing tests. It never writes new ones.
 
 ---
 
@@ -384,9 +573,18 @@ conventions against anything they changed.
   isn't, say so instead of marking it done.
 - Every commit names the requirement(s) it serves, before and after
   it's built. A commit that serves no requirement doesn't get built.
-- **After every commit, `docs/build/<slug>.md` gets updated**: real
-  backticked file paths in `Touches:`, and an `Unplanned:` list (or
-  `none`). Never leave a built commit carrying the plan's guesses.
+- **After every commit, `docs/build/<slug>.md` gets updated**: its
+  `Status:`, its `Checks:` result, real backticked file paths in
+  `Touches:`, and an `Unplanned:` list (or `none`). Never leave a built
+  commit carrying the plan's guesses.
+- **Every commit's reach is checked against its real diff.** Anything
+  that reads what the commit changed gets a verdict on its `Ripple:`
+  line. A reader that breaks and isn't in the plan stops the commit
+  until the developer decides. It's never fixed silently and never
+  left unmentioned.
+- **No commit is handed over for review with a check it broke.** Fix
+  it, or stop and ask after 3 attempts. Never silence a check to get
+  it green.
 - Never write `Unplanned: none` to save a step. An empty list and a
   missing record look identical later and mean opposite things.
 - Nothing on the out-of-scope list gets built, however small or
@@ -408,6 +606,9 @@ conventions against anything they changed.
   best practice for this kind of change. `/verify-me` checks the
   build against the real app afterward and lists what tests are
   actually needed — writing them here would duplicate that work.
+  Running the project's existing checks, and the related existing
+  tests once at the end, is different. That checks the build; it
+  doesn't add to it.
 
 ---
 
@@ -418,7 +619,17 @@ conventions against anything they changed.
   the latest version is saved in `docs/build/<slug>.md`.
 - The commit plan exists at `docs/build/<slug>.md` and was approved by
   the developer before building started.
-- Every commit from the plan has been built, reviewed, and approved.
+- Every commit from the plan has been built, reviewed, and approved,
+  and its `Status:` in `docs/build/<slug>.md` says so.
+- Every commit's `Ripple:` line lists the other code that reads what
+  it changed, each with a verdict from the real diff. No reader was
+  left `breaks` without the developer's decision.
+- Every commit passed the project's own checks before it was handed
+  over, or the developer knowingly accepted the failure. Each result is
+  on the commit's `Checks:` line.
+- The related existing tests ran once after the last commit. They
+  passed, or every failure was shown to the developer, who decided what
+  to do.
 - Every commit paused for review before the next one started.
 - Every commit was introduced and closed with a short plain-language
   reason tied to a requirement number.

@@ -74,7 +74,9 @@ call costs zero extra rounds.
   requirements block with R-numbers — small tasks deserve the artifact,
   just not the ceremony. Still name any load-bearing assumption in
   that round — a small change can rest on a 🔴 too, and if it does,
-  step up to MEDIUM.
+  step up to MEDIUM. And still draft the list of what else relies on
+  it (see "Find what else relies on it"). Small changes cause exactly
+  this kind of bug.
 - **MEDIUM** — a real feature, but contained. Run normal rounds aiming
   for 2–3 total. Merge the close into one message: a drafted summary of
   the 10 closing answers built from the running tally, the two gap
@@ -84,8 +86,13 @@ call costs zero extra rounds.
   ambiguous. Full treatment as written below, including the unprompted
   recite-back.
 
+If the size was already agreed before you started (e.g. `/ship-me`
+sized the whole run and the developer confirmed it), use that size and
+don't propose it again.
+
 If mid-session the problem turns out bigger than sized, say so and
 step up a size — never silently stay shallow on a problem that grew.
+Under `/ship-me` that steps up the whole run too, so say it plainly.
 
 ---
 
@@ -191,6 +198,76 @@ Each one ends in one of three states:
 
 🟡 items should be confirmed too, but the developer may settle them
 alone. 🟢 items just get decided.
+
+---
+
+## Find what else relies on it
+
+A change is bigger than the feature it's for. Other parts of the app
+read the same data and quietly count on things about it that were
+always true until now. Example: a restaurant adds quick-service orders,
+which have no table. The feature itself works. But the daily stats
+group every order by its table, and they fail the first time a
+quick-service order shows up. Nobody asked about stats, because stats
+weren't part of the feature.
+
+That's what this step catches. Do it at every size, SMALL too. It is
+the cheapest way to avoid that bug.
+
+**1. Say what stops being true.** For everything the change adds or
+changes, write down what the rest of the app could safely assume
+before, and no longer can. Phrase each one as *"it used to be always
+true that …, now …"*:
+
+- **A new kind of thing** — a new status, type, or mode. *"Every order
+  was a table order; now some are quick-service."*
+- **Something that becomes optional** — *"every order had a table; now
+  some don't."* Or the reverse: *"a note was optional; now it's
+  required, and old rows don't have one."*
+- **Something whose meaning changes** — *"'total' included tax; now it
+  doesn't."*
+- **Something removed, renamed, or moved.**
+- **A new way in** — the same thing can now be created, changed, or
+  deleted from somewhere it couldn't be before.
+
+**2. Find everyone who relied on it.** Search the code yourself (see
+"Get facts yourself") for everything that reads that data, or makes a
+decision based on it. Don't stop at the feature's own screens. Always
+check the places that read *everything*, because they're the ones
+nobody thinks of: stats, reports and dashboards, exports, receipts and
+printing, notifications and emails, scheduled and background jobs,
+admin screens, and anything another app or team reads. Then go one
+step further: what uses *their* output? (The stats feed a dashboard,
+and the dashboard feeds a daily email.)
+
+**3. Put the list to the developer, one line each, and get a decision
+for every item.** Say what each one does with the data today and what
+happens to it after the change:
+
+> These also read orders and assume every order has a table:
+> 1. **Daily stats** — group sales by table. A quick-service order
+>    would make them fail. Should quick-service sales count, and where?
+> 2. **Floor plan screen** — shows open orders on their tables.
+>    Quick-service orders would have nowhere to go. Leave them off?
+> 3. **Kitchen ticket** — prints the table number. What should it
+>    print instead?
+
+Each item ends up as one of these:
+
+- **Must keep working, and how** → becomes a requirement (an R-number)
+  and a line in the proof list.
+- **Must stay exactly as it is** → goes under "Must always stay true",
+  plus a proof line showing it still does.
+- **Out of scope** → goes on the out-of-scope list with what will
+  happen to it, in the developer's words. *"Quick-service orders don't
+  appear on the floor plan — fine."*
+
+"It's probably fine" is a guess, like any other. If you can't tell from
+the code whether an item breaks, say so, and settle it the way you'd
+settle any guess.
+
+If this list turns up other features that have to change too, the
+problem is bigger than it looked. Say so and step up a size.
 
 ---
 
@@ -504,6 +581,9 @@ land on goes into the file verbatim.
 - Their answers to the stress-test scenarios match their own rules
   (LARGE; merged into the single closing message for MEDIUM).
 - Nothing important is still a guess.
+- Everything else that relies on what changes was found by searching
+  the code, and each item got a decision: a requirement, must stay
+  true, or out of scope.
 - Every load-bearing assumption was named with both sides (X vs Y),
   rated 🔴/🟡/🟢 with what would change, and every 🔴 is Confirmed by
   the person who owns it or an Accepted risk in the developer's words —
@@ -564,6 +644,13 @@ person, or for a future session).
 
 ## How we'll know it worked
 <plain description>
+
+## What else relies on this
+| Other feature | What it counts on today | After the change | Decision |
+|---|---|---|---|
+| <plain name> | <e.g. every order has a table> | <breaks / still fine / unsure> | <R-number / must stay true / out of scope: "<their words>"> |
+
+<or "Nothing else reads what changes — checked: <which areas, in plain words>">
 
 ## Load-bearing assumptions
 | | We assume | If instead | What would change | Status |

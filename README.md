@@ -43,10 +43,10 @@ Restart Claude Code, then:
 | `/grill-me` | Interrogates you until you can explain the problem, the constraints, and the consequences yourself. Drafts what's **out of scope** and **how we'd know it works** — the two things developers always leave vague — and makes you confirm or correct them. Finds the **load-bearing assumptions**: rates how much of the design each would change if wrong (🔴 🟡 🟢, with a rough %), asks those first, and writes the question to send your project manager when it isn't yours to answer. | `docs/grilling/<slug>.md` |
 | `/solve-me` | Breaks the problem into sub-problems. For each, every genuinely different solution that exists — not three fake options — plus one recommendation. No framework or library names allowed, so the design survives a stack change. Also lists every input, data and scenario that could break the design, so `/build-me` handles each one and `/verify-me` tries each one. | `docs/solutions/<slug>.md`, `docs/breakers/<slug>.md` |
 | `/critique-me` | Tries to break the solution before you approve it. Checks it against your own answers from `/grill-me`, against how your codebase already solves similar problems, and against the standard ways this kind of problem is solved. Every finding needs evidence. Under `/ship-me` it works in dialogue with `/solve-me`: the solver proposes, the critic tries to break it, the solver fixes or pushes back with evidence, until they agree or you have to decide. | `docs/critique/<slug>.md` |
-| `/build-me` | Cuts the work into commits, gets your approval on the plan, then builds one commit at a time. Each commit says which requirement it serves and which breakers it handles — every breaker must land in some commit. Draws a **big-picture diagram** of the tables and files the feature touches, and re-draws it after every commit so you see where it fits. New logic gets a one-line `// WHY:` comment in plain words, meant to be deleted once read. Suggests a clean commit message — no co-author lines or trailers. | `docs/build/<slug>.md` |
+| `/build-me` | Cuts the work into commits, gets your approval on the plan, then builds one commit at a time. Each commit says which requirement it serves and which breakers it handles — every breaker must land in some commit. Draws a **big-picture diagram** of the tables and files the feature touches, and re-draws it after every commit so you see where it fits. New logic gets a one-line `// WHY:` comment in plain words, meant to be deleted once read. Runs the project's own fast checks (syntax, formatter, static analysis) on every commit and fixes what it broke before you review it. The related existing tests run once, after the last commit. Suggests a clean commit message — no co-author lines or trailers. | `docs/build/<slug>.md` |
 | `/verify-me` | Acts like a QA engineer, not a code reviewer. Creates real data, hits the running app with curl — golden path, edge cases, hostile inputs, and every breaker from `/solve-me` — and logs every request and response. Ends with a list of the tests that are still missing. Writes none of them. | `docs/verification/<slug>.md` |
 | `/test-me` | Writes the missing tests, and actively refuses the useless ones: tests that can't fail, that test the framework, or that lock in implementation details. Every test comes with one sentence on the real bug it catches. | test files |
-| `/ship-me` | Conductor. Runs the whole pipeline, keeping the interactive phases in your session and spawning the rest fresh. Three approval gates: solution options, commit plan, go-ahead for tests. At the end it writes one feature summary and deletes the per-phase working docs. | `docs/<slug>.md` |
+| `/ship-me` | Conductor. Sizes the run first (SMALL / MEDIUM / LARGE), so a one-line fix skips the design phases, and reproduces a bug before anything is built. Runs the pipeline, keeping the interactive phases in your session and spawning the rest fresh. Approval gates: solution options, commit plan, go-ahead for tests. Keeps a run-state file, so an interrupted or compacted run resumes where it stopped, with your gate answers intact. At the end it writes one feature summary and deletes the per-phase working docs. | `docs/ship/<slug>.md`, `docs/<slug>.md` |
 
 Each phase hands its markdown file to the next one, so the reasoning is on disk
 and reviewable instead of buried in a chat log. Each skill is also usable on its
@@ -88,21 +88,39 @@ codebase — but it's why the four spawned phases are the cheap ones.
 
 ## What you'll see along the way
 
+- **Before anything runs:** one message with the run's slug, size and kind.
+  SMALL (one behavior, 1–2 files, one obvious way to build it) skips
+  `/solve-me` and `/critique-me`, and asks at the end whether to verify and
+  test. MEDIUM and LARGE run everything. Anything touching auth, money,
+  deleting data, migrations or a shared API is never SMALL. You can move the
+  size either way.
+- **For a bug fix:** the bug reproduced against the running app before any
+  code is written, and the same steps run again after the build.
 - **After `/grill-me`:** a table of load-bearing assumptions — what we assume,
   what if not, how much would change — each confirmed by whoever owns it, or
   accepted as a risk in your own words.
 - **While the solution is designed:** one line per round of the solve-me ↔
   critique-me dialogue ("Round 2: 2 of 3 fixed, 1 disagreed"). It ends when the
-  critic can't break it, when they deadlock, or after 4 rounds — anything
+  critic can't break it, when they deadlock, or after 2 rounds — anything
   unsettled comes to you with both sides' position.
 - **At the solution gate:** the recommendation and runner-up per sub-problem,
   and every open question, answerable from chat.
 - **During the build:** the big-picture diagram after every commit, the
-  breakers that commit handled, and the decisions it made that nobody approved.
+  breakers that commit handled, the decisions it made that nobody approved, and
+  one line of check results (`php -l` ✅ · `pint` ✅ · `phpstan` ✅). You never
+  review a commit that fails its own project's checks.
 - **At the end:** one `docs/<slug>.md` — what changed, the decisions and why,
   the final diagram, what could break it and how it's handled, what was
   verified, the tests added. The per-phase working docs are deleted (after you
   say yes), so the commit carries the record, not the scaffolding.
+
+## Stopping and resuming
+
+`/ship-me` keeps `docs/ship/<slug>.md` current at every step: the phase, what
+it's waiting on, and every answer you gave at a gate, in your words. Close the
+session, or let it compact, and `/ship-me continue` picks up at that exact point
+after a short briefing. It also tells you when a phase boundary makes it a good
+moment to run `/compact`.
 
 ## See it before you run it
 
@@ -139,6 +157,13 @@ green checkmark.
 chat log — and the four non-interactive phases run with no memory of your
 session, so a write-up that only makes sense in context fails loudly instead
 of quietly.
+
+**A change is bigger than its diff.** Adding quick-service orders with no
+table can crash the stats page nobody touched. `/grill-me` searches for
+everything that reads what's changing and makes you decide about each one;
+`/solve-me` turns them into breakers, `/critique-me` hunts for the ones it
+missed, `/build-me` re-checks each commit's real diff for code it reaches, and
+`/verify-me` loads those features with the new kind of data present.
 
 **The decisions nobody approved are the ones that bite.** Every other choice
 in this pipeline passes a gate. The ones made mid-commit don't — so

@@ -114,6 +114,12 @@ List the sub-problems and briefly say why you split it that way. If the
 problem is small enough to be one sub-problem, say so and treat it as a
 single sub-problem — don't force a split.
 
+Read the problem write-up's **What else relies on this** table. Every
+other feature there that must change to keep working (it has an
+R-number) belongs to some sub-problem. It can get one of its own, or
+sit inside the sub-problem whose change affects it. It must never be
+left for the build to discover.
+
 ---
 
 ## Step 2 — Solve each sub-problem (conquer)
@@ -256,7 +262,7 @@ sure every one is handled and `/verify-me` can try every one against
 the real app. Think like someone trying to break it on purpose, and
 like a tired user on a bad day.
 
-Go through three groups, and for each, think about the chosen options
+Go through four groups, and for each, think about the chosen options
 specifically — what could break **this** design, not features in
 general:
 
@@ -269,6 +275,15 @@ general:
   huge amount, old records created before this feature, missing or
   half-filled values, duplicates, records in an unexpected state,
   records that were deleted or changed mid-way.
+- **Other features** — every other part of the app that reads what
+  this design changes: each row of the problem write-up's **What else
+  relies on this** table, plus anything your own design adds to it. A
+  new value, a column that becomes optional, or a changed meaning lands
+  in places the feature never mentions. Stats, reports, exports,
+  receipts, emails and background jobs read everything. The case is
+  "the new kind of data reaches that feature". Nobody touching that
+  feature doesn't make it safe. This group also covers what "Must
+  always stay true" promised stays the same.
 - **Scenarios** — how things happen in time: the same action twice,
   two people at once, steps arriving out of order, a failure halfway
   through, a retry after a failure, a timeout, something another
@@ -294,6 +309,13 @@ Problem:  docs/grilling/<slug>.md
 
 ## Data
 - **B4 — …**
+
+## Other features
+- **B6 — <other feature> meets <the new kind of data>:** <e.g. a
+  quick-service order, with no table, reaches the daily stats>
+  - **Would break:** <R-number or rule it threatens>
+  - **Handled by:** <sub-problem N — how that feature keeps working>
+  - **Risk:** 🔴 / 🟡 / 🟢
 
 ## Scenarios
 - **B7 — …**

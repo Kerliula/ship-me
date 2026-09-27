@@ -89,6 +89,16 @@ Look for:
   against a pattern the project uses everywhere else.
 - **An option that fits much better.** A rejected option that matches
   the project's existing patterns far more closely than the winner.
+- **Code that relies on what changes, and nobody listed it.** For
+  everything the design adds or changes (a new status or type, a
+  column that becomes optional, a changed meaning), search for
+  everything that reads it: the column and relation names, every place
+  that branches on that status or type, and queries that join through
+  it. Pay most attention to stats, reports, exports, printing, emails,
+  scheduled jobs and admin screens. Any reader missing from the
+  problem's **What else relies on this** table and from the breakers'
+  **Other features** is a finding. If it would crash or show wrong
+  numbers, it's must-fix.
 
 Cite the file paths you found. If the codebase gives you nothing
 relevant, say that plainly — don't stretch a weak match into a

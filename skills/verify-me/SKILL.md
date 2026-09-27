@@ -31,16 +31,23 @@ report — cleanly.
 
 ## Input
 
-You need three things:
+You need these:
 
 1. The problem write-up (from `/grill-me`, e.g.
    `docs/grilling/<topic>.md`).
 2. The solution write-up (from `/solve-me`, e.g.
-   `docs/solutions/<topic>.md`).
+   `docs/solutions/<topic>.md`). A SMALL `/ship-me` run has no
+   solve-me phase; there the commit plan (`docs/build/<topic>.md`)
+   stands in for it.
 3. What can break it (from `/solve-me`, e.g.
    `docs/breakers/<topic>.md`), if it exists.
 4. What was actually built (from `/build-me` — recent commits, changed
-   files, or just ask the developer what to verify).
+   files, or just ask the developer what to verify). If the build file
+   has a `Base commit:`, `git diff --stat <base>` plus
+   `git status --porcelain` shows exactly what changed.
+5. For a bug fix: the reproduction from `/ship-me` (the steps, and
+   what they showed before the fix), if there is one. Run it again
+   first. It's the most direct proof the fix worked.
 
 If any of these are missing, ask for them or the file paths. Don't
 guess at what "correct" means — pull it from the problem's rules and
@@ -48,7 +55,7 @@ edge cases and the solution's chosen options.
 
 ### Confirm with the developer before touching anything
 
-Even when all three inputs are handed to you, **stop once, ask, and
+Even when all the inputs are handed to you, **stop once, ask, and
 wait** before running the first request. Keep it to one short round —
 propose your own answers so they can just say "yes":
 
@@ -84,6 +91,10 @@ From the two write-ups, pull out a short checklist:
 - Every case in the breakers file (B1, B2, …) — each one becomes at
   least one real request, and the report says which B-number it tried.
 - Every "must always stay true" rule.
+- Every **other feature that reads what changed**: the grilling file's
+  **What else relies on this** table, the breakers' **Other features**,
+  and each commit's `Ripple:` line in the build file. Prioritize those
+  marked `unsure` or `handled`.
 - What's explicitly out of scope (don't test what was deliberately not
   built).
 - How the problem doc says success should be observed — use that as
@@ -145,6 +156,17 @@ Cover, for every new or input-changed endpoint or entry point:
   don't exist.
 - **Anything solve-me flagged as a weak point** for the option that
   was actually chosen.
+
+And for every other feature that reads what changed, even though it's
+not new: **make the new kind of data exist, then use that feature.**
+Create a quick-service order, then load the stats page, the export,
+the report, the receipt. Run the scheduled command or job that reads
+it, if it can be triggered safely. This is where the bugs nobody asked
+about show up: a crash, or numbers that silently leave out the new
+rows. So check the numbers, not only the status code. One request per
+feature is usually enough. If a feature can't be reached from outside
+(e.g. a nightly job you can't safely trigger), say so in the report
+rather than skipping it silently.
 
 For every single request, keep a record of exactly what you sent and
 exactly what came back (status code and body).
@@ -218,6 +240,9 @@ went wrong>
 | R1 — <short restatement> | requests 1, 3 | ✅ |
 | R2 — <short restatement> | request 5 | ❌ — see Problems found |
 | R3 — <short restatement> | skipped — <why, one line> | — |
+
+## Other features checked
+- <feature> with <the new kind of data> — ✅ / ❌ — <request number>
 
 ## Rules checked
 - <rule from problem/solution, plain language> — ✅ / ❌
